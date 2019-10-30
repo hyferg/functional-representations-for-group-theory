@@ -1,31 +1,56 @@
-idxSum a b = zipWith (+) a b
+import Data.List
+import MathObj.LaurentPolynomial as LP
 
-class Node a where
-  contract :: a -> a -> a
+data IndexType = Up | Down | Gluon deriving (Show)
 
-data Casimir = CasimirList [Int]
+-- pointer (VectorSpace Object Index, VectorSpace Object Internal Index)
+data Pointer = Pointer IndexType (Int, Int) deriving (Show)
+data IndexableObject = Tensor [Pointer] deriving (Show)
+data VectorSpace a = TensorProduct (LP.T a) [IndexableObject] deriving (Show)
+data State a = Original a | New a deriving (Show)
 
-instance Node Casimir where
-  contract (CasimirList a) (CasimirList b) = CasimirList $ idxSum a b
+pointers (Tensor t) = t
+pointersOnlyIndices (Tensor t) indices = [
+  pointer | (pointer, idx) <- zip t [0,1..], (idx `elem` indices)]
+pointersExceptIndices (Tensor t) indices = [
+  pointer | (pointer, idx) <- zip t [0,1..], not (idx `elem` indices)]
 
-genCas :: [Int] -> Casimir
-genCas a = CasimirList $ a ++ (repeat 0)
+pointData (Pointer _ a) = a
+pointsData t = map pointData t
 
-instance Semigroup Casimir where
-  (<>) = contract
+{-[
+  otherTensorSpaceIDX,
+  [(selfIDX, otherTensorInternalIDX),(...)]
+]
+-}
+selfInternalIDX x = fst x
+otherTensorSpaceIDX x = fst $ snd x
+otherTensorInternalIDX x = snd $ snd x
+doublePointInfo (Tensor t) = [
+  (
+    (otherTensorSpaceIDX x),
+    [
+      (selfInternalIDX x, (otherTensorInternalIDX x)),
+      (selfInternalIDX y, (otherTensorInternalIDX y))
+    ]
+  ) |
+    (x:ys) <- tails $ zip [0,1..] (pointsData t),
+    y <- ys,
+    (otherTensorSpaceIDX x) == (otherTensorSpaceIDX y)]
 
-instance Monoid Casimir where
-  mempty = CasimirList (repeat 0)
-
-instance Show Casimir where
-  show (CasimirList a) =
-    let idxs = [snd pairs | pairs <- zip a ['i'..'z'], fst pairs == 1]
-    in "C_{" ++ idxs ++ "}"
+popBubbleTensors :: [IndexableObject] -> State [IndexableObject]
+popBubbleTensors tensors
+  | [] == aDoublePoint = Original tensors
+  where
+    aDoublePoint = zip [0,1..] (head $ map doublePointInfo tensors)
 
 
-x = genCas [1,1,1]
-y = genCas [0,1,1,1]
-z = genCas [0,0,0,1,1,1]
+-- bubbleInfo (TensorProduct poly tensors) = [
+-- head $ doublePointInfo x | x <- tensors,
+--   not (null $ doublePointInfo x)]
 
-define = [x,y,z]
-reduce = mconcat define
+t1 = Tensor [Pointer Gluon (-1,0), Pointer Up (1,2), Pointer Down (1,1)]
+t2 = Tensor [Pointer Gluon (-2,0), Pointer Up (0,2), Pointer Down (0,1)]
+t3 = Tensor [Pointer Gluon (-1,0), Pointer Up (1,2), Pointer Down (2,1)]
+
+vs = TensorProduct (fromCoeffs [1]) [t1, t2, t3]
