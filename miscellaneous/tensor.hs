@@ -9,7 +9,8 @@ data IndexableObject = Tensor [Pointer] deriving (Show)
 data VectorSpace a = TensorProduct (LP.T a) [IndexableObject] deriving (Show)
 data State a = Original a | New a deriving (Show)
 
-pointers (Tensor t) = t
+tensorsOf (TensorProduct _ tensors) = tensors
+pointersOf (Tensor t) = t
 pointersOnlyIndices (Tensor t) indices = [
   pointer | (pointer, idx) <- zip t [0,1..], (idx `elem` indices)]
 pointersExceptIndices (Tensor t) indices = [
@@ -38,11 +39,21 @@ doublePointInfo (Tensor t) = [
     y <- ys,
     (otherTensorSpaceIDX x) == (otherTensorSpaceIDX y)]
 
+--newTensors aDoublePoint tensors = 
+
+  {-
 popBubbleTensors :: [IndexableObject] -> State [IndexableObject]
 popBubbleTensors tensors
   | [] == aDoublePoint = Original tensors
+  | otherwise = newTensors
   where
-    aDoublePoint = zip [0,1..] (head $ map doublePointInfo tensors)
+    doublePoints = filter (\x -> [] /= snd x) $ zip [0,1..] $ map doublePointInfo tensors
+    newTensors = if doublePoints /= []
+                 then
+                   --New newTensors $ aDoublePoint tensors
+                 else
+                   Original tensors
+-}
 
 
 -- bubbleInfo (TensorProduct poly tensors) = [
