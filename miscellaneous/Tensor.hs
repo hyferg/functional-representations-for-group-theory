@@ -74,12 +74,17 @@ sunP1Link tensors
     sunP1Tensors_ =
       [((k1, t1), (k2, t2)) | ((k1, t1), (k2, t2)) <- tensorMapPairs tensors, sunP1 t1 t2]
 
-p1UpdatesLHS :: (Int, Tensor) -> [((Int, Int), (Int, Int))]
-p1UpdatesLHS (vsIDX, (Tensor pointersMap)) = updates
+--p1UpdatesLHS :: ((Int, Tensor), (Int, Tensor)) -> [((Int, Int), (Int, Int))]
+p1UpdatesLHS ( (vs0, (Tensor p0)), (vs1, (Tensor p1)) ) = updates
   where
-    ps = Map.toAscList pointersMap
-    updates = [ ((vsIDX, pIDX), (i, j)) | (pIDX, (Pointer (i,j) a)) <- ps, a==Up||a==Down]
+    ps0 = Map.toAscList p0
+    ps1 = Map.toAscList p1
 
+    updates = [ ((vs0, p0IDX), (vs1, p1IDX)) |
+                (p0IDX, (Pointer _ a)) <- ps0, a==Up||a==Down,
+                (p1IDX, (Pointer _ b)) <- ps1, b==Up||b==Down,
+                a /= b
+                                         ]
 
 p1UpdatesRHSOneElem :: (Int, Tensor) -> [((Int, Int), (Int, Int))]
 p1UpdatesRHSOneElem (vsIDX, (Tensor pointersMap)) = updates
@@ -126,8 +131,8 @@ updatePointerAt (Just (Pointer _ edgeType)) (i, j) = Just (Pointer (i, j) edgeTy
 tensorsMap :: Tensors -> Map Int Tensor
 tensorsMap (Tensors tensorsMap) = tensorsMap
 
-rewire :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
-rewire tensors ((vsIDX, pIDX), newVals) = newTensors
+rewireSingle :: ((Int, Int), (Int, Int)) -> Maybe Tensors -> Maybe Tensors
+rewireSingle ((vsIDX, pIDX), newVals) (Just tensors) = newTensors
   where
     maybePointersMap = getPointersMap tensors vsIDX
     newPointersMap = case maybePointersMap of
@@ -143,3 +148,16 @@ rewire tensors ((vsIDX, pIDX), newVals) = newTensors
     newTensors = case newTensor of
       Nothing -> Nothing
       Just tensor -> Just $ Tensors $ Map.insert vsIDX tensor $ tensorsMap tensors
+rewireSingle _ _ = Nothing
+
+rewireDual :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
+rewireDual tensors (here, there) = rewireSingle (there, here) (rewireSingle (here, there) (Just tensors))
+
+rewire :: Maybe Tensors -> [((Int,Int),(Int,Int))] -> Maybe Tensors
+rewire (Just tensors) links
+  | length links == 1 = newTensors
+  | otherwise = rewire newTensors ls
+  where
+    (l:ls) = links
+    newTensors = rewireDual tensors l
+rewire _ _ = Nothing
