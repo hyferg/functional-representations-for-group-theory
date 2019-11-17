@@ -30,9 +30,18 @@ identity = fromCoeffs [1]
 dumbellTensors = Tensors $ Map.fromAscList $ zip [0,1..] [t0, t1]
 dumbell = TensorProduct identity dumbellTensors
 
-  {-
-maybeTensors = fst $ decomposeP1 dumbell
-maybeLinks = snd $ decomposeP1 dumbell
-z (Just list) = list
-final = rewireSingle (head $ Data.Maybe.fromJust maybeLinks) maybeTensors
--}
+updatesLHS = return dumbellTensors >>= sunP1Link >>= p1UpdatesLHS
+maybeIdxs = return dumbellTensors >>= sunP1Link >>= vsIDXsToWipe
+
+scrubbedTensors = case maybeIdxs of
+                    Nothing -> Nothing
+                    Just idxs -> Just (wipeTensors dumbellTensors idxs)
+
+
+x = case updatesLHS of
+  Nothing -> []
+  Just a -> a
+
+
+liftTensors (Just tensors) = tensors
+t = rewireDual (liftTensors scrubbedTensors) (x !! 0)

@@ -26,87 +26,51 @@ instance EqEdgeType Pointer where
   edgeEq _ _ = False
 
 isGluon :: Pointer -> Bool
+keylessMapToList :: Map k a -> [a]
+pointers :: Tensor -> [Pointer]
+tensorsList :: Tensors -> [Tensor]
+nonGluonPointers :: Tensor -> [Pointer]
+mappedKeys :: Tensor -> [(Int, Int)]
+uniqueVsKeys :: Tensor -> [Int]
+tensorPairs :: Tensors -> [(Tensor, Tensor)]
+tensorMapPairs :: Tensors -> [((Int, Tensor), (Int, Tensor))]
+wipeTensor :: Tensors -> Int -> Tensors
+wipeTensors :: Tensors -> [Int] -> Tensors
+getTensor :: Tensors -> Int -> Maybe Tensor
+justPointersMap :: Tensor -> Maybe (Map Int Pointer)
+getPointersMap :: Tensors -> Int -> Maybe (Map Int Pointer)
+updatePointerAt :: Maybe Pointer -> (Int, Int) -> Maybe Pointer
+pullTensorsMap :: Tensors -> Map Int Tensor
+rewireSingle :: ((Int, Int), (Int, Int)) -> Maybe Tensors -> Maybe Tensors
+rewireDual :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
+rewire :: Maybe Tensors -> [((Int,Int),(Int,Int))] -> Maybe Tensors
+
+
 isGluon (Pointer _ Gluon) = True
 isGluon _ = False
 
-keylessMapToList :: Map k a -> [a]
 keylessMapToList m = [a | (_, a) <- Map.toAscList m]
 
-pointers :: Tensor -> [Pointer]
 pointers (Tensor pointersMap) = keylessMapToList pointersMap
 
-tensorsList :: Tensors -> [Tensor]
 tensorsList (Tensors tensorsMap) = keylessMapToList tensorsMap
 
-nonGluonPointers :: Tensor -> [Pointer]
 nonGluonPointers t = Prelude.filter (not . isGluon) $ pointers t
 
-mappedKeys :: Tensor -> [(Int, Int)]
 mappedKeys t = [ (i, j) | (Pointer (i,j) _) <- pointers t]
 
-uniqueVsKeys :: Tensor -> [Int]
 uniqueVsKeys t = nub [ i | (i, _)<- mappedKeys t]
 
-tensorPairs :: Tensors -> [(Tensor, Tensor)]
 tensorPairs (Tensors tensorsMap) =
   [ (x,y) | (x:ys) <- tails $ keylessMapToList tensorsMap, y <- ys ]
 
-tensorMapPairs :: Tensors -> [((Int, Tensor), (Int, Tensor))]
 tensorMapPairs (Tensors tensorsMap) =
   [ (x,y) | (x:ys) <- tails $ Map.toAscList tensorsMap, y <- ys ]
 
-{-
-The same ordering of Up/Down pointers in two gluon connected tensors
-indicates that it a P1 operator. Maybe needs a test to make sure the
-tensor is not (Gluon Down Down) etc.
--}
-sunP1 :: Tensor -> Tensor -> Bool
-sunP1 t1 t2 = 2 == length [ True | (i, j) <- zip x y, edgeEq i j]
-  where
-    x = nonGluonPointers t1
-    y = nonGluonPointers t2
 
-sunP1Link :: Tensors -> Maybe ((Int, Tensor), (Int, Tensor))
-sunP1Link tensors
-  | [] == sunP1Tensors_ = Nothing
-  | otherwise = Just $ head sunP1Tensors_
-  where
-    sunP1Tensors_ =
-      [((k1, t1), (k2, t2)) | ((k1, t1), (k2, t2)) <- tensorMapPairs tensors, sunP1 t1 t2]
+wipeTensor (Tensors tensorsMap) key = Tensors $
+  Map.adjust (\(Tensor _) -> (Tensor $ Map.fromList [])) key tensorsMap
 
---p1UpdatesLHS :: ((Int, Tensor), (Int, Tensor)) -> [((Int, Int), (Int, Int))]
-p1UpdatesLHS ( (vs0, (Tensor p0)), (vs1, (Tensor p1)) ) = updates
-  where
-    ps0 = Map.toAscList p0
-    ps1 = Map.toAscList p1
-
-    updates = [ ((vs0, p0IDX), (vs1, p1IDX)) |
-                (p0IDX, (Pointer _ a)) <- ps0, a==Up||a==Down,
-                (p1IDX, (Pointer _ b)) <- ps1, b==Up||b==Down,
-                a /= b
-                                         ]
-
-p1UpdatesRHSOneElem :: (Int, Tensor) -> [((Int, Int), (Int, Int))]
-p1UpdatesRHSOneElem (vsIDX, (Tensor pointersMap)) = updates
-  where
-    ps = Map.toAscList pointersMap
-    updates = [ ((i,j), (k,l)) |
-                ((_, (Pointer (i,j) a )):ys) <- tails ps,
-                (_, (Pointer (k,l) b )) <- ys,
-                a==Up||a==Down,
-                b==Up||b==Down,
-                a /= b
-                                                       ]
-p1UpdatesRHS :: ((Int, Tensor), (Int, Tensor)) -> [((Int, Int), (Int, Int))]
-p1UpdatesRHS (a, b) = l ++ r
-  where
-    l = p1UpdatesRHSOneElem (a)
-    r = p1UpdatesRHSOneElem (b)
-
-wipeTensor :: Tensors -> Int -> Tensors
-wipeTensor (Tensors tensorsMap) key = Tensors $ Map.insert key (Tensor $ Map.fromList []) tensorsMap
-
-wipeTensors :: Tensors -> [Int] -> Tensors
 wipeTensors tensors vsIDXs
   | length vsIDXs == 1 = newTensors
   | otherwise = wipeTensors newTensors idxs
@@ -114,24 +78,20 @@ wipeTensors tensors vsIDXs
     (idx:idxs) = vsIDXs
     newTensors = wipeTensor tensors idx
 
-getTensor :: Tensors -> Int -> Maybe Tensor
 getTensor (Tensors tensorsMap) vsIDX = Map.lookup vsIDX tensorsMap
 
 justPointersMap (Tensor pointersMap) = Just pointersMap
 
-getPointersMap :: Tensors -> Int -> Maybe (Map Int Pointer)
 getPointersMap tensors vsIDX = pointersMap_
   where
     maybeTensor = getTensor tensors vsIDX
     pointersMap_ = maybeTensor >>= justPointersMap
 
-updatePointerAt :: Maybe Pointer -> (Int, Int) -> Maybe Pointer
 updatePointerAt (Just (Pointer _ edgeType)) (i, j) = Just (Pointer (i, j) edgeType)
+updatePointerAt _ _ = Nothing
 
-tensorsMap :: Tensors -> Map Int Tensor
-tensorsMap (Tensors tensorsMap) = tensorsMap
+pullTensorsMap (Tensors tensorsMap) = tensorsMap
 
-rewireSingle :: ((Int, Int), (Int, Int)) -> Maybe Tensors -> Maybe Tensors
 rewireSingle ((vsIDX, pIDX), newVals) (Just tensors) = newTensors
   where
     maybePointersMap = getPointersMap tensors vsIDX
@@ -147,13 +107,11 @@ rewireSingle ((vsIDX, pIDX), newVals) (Just tensors) = newTensors
 
     newTensors = case newTensor of
       Nothing -> Nothing
-      Just tensor -> Just $ Tensors $ Map.insert vsIDX tensor $ tensorsMap tensors
+      Just tensor -> Just $ Tensors $ Map.insert vsIDX tensor $ pullTensorsMap tensors
 rewireSingle _ _ = Nothing
 
-rewireDual :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
 rewireDual tensors (here, there) = rewireSingle (there, here) (rewireSingle (here, there) (Just tensors))
 
-rewire :: Maybe Tensors -> [((Int,Int),(Int,Int))] -> Maybe Tensors
 rewire (Just tensors) links
   | length links == 1 = newTensors
   | otherwise = rewire newTensors ls
