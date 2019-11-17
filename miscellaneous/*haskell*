@@ -6208,4 +6208,705 @@ Collecting type info for 2 module(s) ...
 Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
 λ> dumbellTensors
 Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))])
+λ> rewire dumbellTensors ((3,0),(1,1))
+Nothing
+λ> rewire dumbellTensors ((2,0),(9,9))
+Nothing
+λ> rewire dumbellTensors ((0,2),(9,9))
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (9,9) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> sunP1Link dumbellTensors
+Just ((0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)])))
+λ> p1UpdatesLHS dumbellTensors
+
+<interactive>:5416:14-27: error:
+    • Couldn't match expected type ‘(Int, Tensor)’
+                  with actual type ‘Tensors’
+    • In the first argument of ‘p1UpdatesLHS’, namely ‘dumbellTensors’
+      In the expression: p1UpdatesLHS dumbellTensors
+      In an equation for ‘it’: it = p1UpdatesLHS dumbellTensors
+λ> p1UpdatesLHS t0
+
+<interactive>:5418:14-15: error:
+    • Couldn't match expected type ‘(Int, Tensor)’
+                  with actual type ‘Tensor’
+    • In the first argument of ‘p1UpdatesLHS’, namely ‘t0’
+      In the expression: p1UpdatesLHS t0
+      In an equation for ‘it’: it = p1UpdatesLHS t0
+λ> p1UpdatesLHS (0,t0)
+[((0,0),(0,1)),((0,1),(0,0))]
+λ> links = p1UpdatesLHS (0, t0)
+λ> re
+
+<interactive>:5422:1-2: error:
+    • Variable not in scope: re
+    • Perhaps you meant ‘rem’ (imported from Prelude)
+λ> rewire (Just dumbellTensors) links
+
+<interactive>:5425:9-27: error:
+    • Couldn't match expected type ‘Tensors’
+                  with actual type ‘Maybe Tensors’
+    • In the first argument of ‘rewire’, namely ‘(Just dumbellTensors)’
+      In the expression: rewire (Just dumbellTensors) links
+      In an equation for ‘it’: it = rewire (Just dumbellTensors) links
+
+<interactive>:5425:30-34: error:
+    • Couldn't match expected type ‘((Int, Int), (Int, Int))’
+                  with actual type ‘[((Int, Int), (Int, Int))]’
+    • In the second argument of ‘rewire’, namely ‘links’
+      In the expression: rewire (Just dumbellTensors) links
+      In an equation for ‘it’: it = rewire (Just dumbellTensors) links
+λ> :t links
+links :: [((Int, Int), (Int, Int))]
+λ> :t rewire
+rewire :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> links = p1UpdatesLHS (0, t0)
+λ> :t rewire
+rewire
+  :: Maybe Tensors -> [((Int, Int), (Int, Int))] -> Maybe Tensors
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> dumbellTensors
+Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))])
+λ> links = p1UpdatesRHS (0, t0)
+
+<interactive>:5436:26-27: error:
+    • Couldn't match expected type ‘(Int, Tensor)’
+                  with actual type ‘Tensor’
+    • In the expression: t0
+      In the first argument of ‘p1UpdatesRHS’, namely ‘(0, t0)’
+      In the expression: p1UpdatesRHS (0, t0)
+λ> links = p1UpdatesRHS ((0,t0),(1,t1))
+λ> links
+[((0,1),(0,0)),((1,2),(1,1))]
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> t0
+Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])
+λ> rewireSingle ((0,0),(1,0)) dumbellTensors
+
+<interactive>:5445:28-41: error:
+    • Couldn't match expected type ‘Maybe Tensors’
+                  with actual type ‘Tensors’
+    • In the second argument of ‘rewireSingle’, namely ‘dumbellTensors’
+      In the expression: rewireSingle ((0, 0), (1, 0)) dumbellTensors
+      In an equation for ‘it’:
+          it = rewireSingle ((0, 0), (1, 0)) dumbellTensors
+λ> rewireSingle ((0,0),(1,0)) (Just dumbellTensors)
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,0) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> rewireDual ((0,0),(1,0)) (Just dumbellTensors)
+
+<interactive>:5447:12-24: error:
+    • Couldn't match expected type ‘Tensors’
+                  with actual type ‘((Integer, Integer), (Integer, Integer))’
+    • In the first argument of ‘rewireDual’, namely ‘((0, 0), (1, 0))’
+      In the expression:
+        rewireDual ((0, 0), (1, 0)) (Just dumbellTensors)
+      In an equation for ‘it’:
+          it = rewireDual ((0, 0), (1, 0)) (Just dumbellTensors)
+
+<interactive>:5447:27-45: error:
+    • Couldn't match expected type ‘((Int, Int), (Int, Int))’
+                  with actual type ‘Maybe Tensors’
+    • In the second argument of ‘rewireDual’, namely
+        ‘(Just dumbellTensors)’
+      In the expression:
+        rewireDual ((0, 0), (1, 0)) (Just dumbellTensors)
+      In an equation for ‘it’:
+          it = rewireDual ((0, 0), (1, 0)) (Just dumbellTensors)
+λ> rewireDual ((0,0),(1,0)) (dumbellTensors)
+
+<interactive>:5448:12-24: error:
+    • Couldn't match expected type ‘Tensors’
+                  with actual type ‘((Integer, Integer), (Integer, Integer))’
+    • In the first argument of ‘rewireDual’, namely ‘((0, 0), (1, 0))’
+      In the expression: rewireDual ((0, 0), (1, 0)) (dumbellTensors)
+      In an equation for ‘it’:
+          it = rewireDual ((0, 0), (1, 0)) (dumbellTensors)
+
+<interactive>:5448:27-40: error:
+    • Couldn't match expected type ‘((Int, Int), (Int, Int))’
+                  with actual type ‘Tensors’
+    • In the second argument of ‘rewireDual’, namely ‘(dumbellTensors)’
+      In the expression: rewireDual ((0, 0), (1, 0)) (dumbellTensors)
+      In an equation for ‘it’:
+          it = rewireDual ((0, 0), (1, 0)) (dumbellTensors)
+λ> rewireDual dumbellTensors ((0,0),(1,0))
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,0) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,0) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> rewire (Just dumbellTensors) ((0,0),(1,0))
+
+<interactive>:5451:30-42: error:
+    • Couldn't match expected type ‘[((Int, Int), (Int, Int))]’
+                  with actual type ‘((Integer, Integer), (Integer, Integer))’
+    • In the second argument of ‘rewire’, namely ‘((0, 0), (1, 0))’
+      In the expression: rewire (Just dumbellTensors) ((0, 0), (1, 0))
+      In an equation for ‘it’:
+          it = rewire (Just dumbellTensors) ((0, 0), (1, 0))
+λ> rewire (Just dumbellTensors) [((0,0),(1,0))]
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,0) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,0) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> rewire (Just dumbellTensors) [((0,0),(1,0)), ((0,0),(1,0))]
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,0) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,0) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> rewire (Just dumbellTensors) [((0,0),(1,2)), ((0,1),(1,1))]
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))]))
+λ> p1UpdatesLHS dumbellTensors
+
+<interactive>:5457:14-27: error:
+    • Couldn't match expected type ‘(Int, Tensor)’
+                  with actual type ‘Tensors’
+    • In the first argument of ‘p1UpdatesLHS’, namely ‘dumbellTensors’
+      In the expression: p1UpdatesLHS dumbellTensors
+      In an equation for ‘it’: it = p1UpdatesLHS dumbellTensors
+λ> p1UpdatesLHS (0, t0)
+[((0,0),(0,1)),((0,1),(0,0))]
+λ> sunP1Link dumbellTensors
+Just ((0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)])))
+λ> sunP1 t0 t1
+True
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,1)),((0,1),(1,2))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,2)),((0,1),(1,1))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,1))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,2)),((0,0),(1,1))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,2)),((0,0),(1,1)),((0,1),(0,2))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0,t0),(1,t1))
+[((0,0),(1,2)),((0,0),(1,1))]
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,0) Down),(2,Pointer (0,0) Up)]))]))
+λ> links
+[((0,0),(1,2)),((0,0),(1,1))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> links
+[((0,0),(1,2))]
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> links
+[((0,0),(1,1)),((0,1),(1,2))]
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,1) Down),(1,Pointer (1,2) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,0) Down),(2,Pointer (0,1) Up)]))]))
+λ> links
+[((0,0),(1,1)),((0,1),(1,2))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> links
+
+<interactive>:5495:1-5: error:
+    • Variable not in scope: links
+    • Perhaps you meant ‘lines’ (imported from Data.List)
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> links
+[((0,0),(1,2)),((0,1),(1,1))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[(Down,Down),(Up,Up)]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[(Down,Up),(Up,Down)]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[((0,0),(1,1)),((0,1),(1,2))]
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[((0,0),(1,1)),((0,1),(1,2))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[(Down,Down),(Up,Up)]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[(Down,Up),(Up,Down)]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[((Down,0,1),(Up,1,1)),((Up,0,0),(Down,1,2))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS ((0, t0),(1, t1))
+[((0,0),(1,2)),((0,1),(1,1))]
+λ> links = p1UpdatesLHS ((0, t0),(1, t1))
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))]))
+λ> p1UpdatesRHS ((0,t0),(1,t1))
+[((0,1),(0,0)),((1,2),(1,1))]
+λ> links = p1UpdatesRHS ((0,t0),(1,t1))
+λ> rewire (Just dumbellTensors) links
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))
+λ> sunP1 dumbell
+
+<interactive>:5520:7-13: error:
+    • Couldn't match expected type ‘Tensor’
+                  with actual type ‘VectorSpace’
+    • In the first argument of ‘sunP1’, namely ‘dumbell’
+      In the expression: sunP1 dumbell
+      In an equation for ‘it’: it = sunP1 dumbell
+λ> sunP1Link dumbellTensors
+Just ((0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)])))
+λ> l = sunP1Link dumbellTensors
+λ> length l
+1
+λ> :t l
+l :: Maybe ((Int, Tensor), (Int, Tensor))
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> rewire (Just dumbellTensors) (sunP1Link dumbellTensors)
+
+<interactive>:5533:31-54: error:
+    • Couldn't match type ‘((Int, Tensor), (Int, Tensor))’
+                     with ‘[((Int, Int), (Int, Int))]’
+      Expected type: Maybe [((Int, Int), (Int, Int))]
+        Actual type: Maybe ((Int, Tensor), (Int, Tensor))
+    • In the second argument of ‘rewire’, namely
+        ‘(sunP1Link dumbellTensors)’
+      In the expression:
+        rewire (Just dumbellTensors) (sunP1Link dumbellTensors)
+      In an equation for ‘it’:
+          it = rewire (Just dumbellTensors) (sunP1Link dumbellTensors)
+λ> sunP1Link dumbellTensors
+Just ((0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)])))
+λ> p1UpdatesLHS $ sunP1Link dumbellTensors
+
+<interactive>:5538:16-39: error:
+    • Couldn't match expected type ‘((Int, Tensor), (Int, Tensor))’
+                  with actual type ‘Maybe ((Int, Tensor), (Int, Tensor))’
+    • In the second argument of ‘($)’, namely
+        ‘sunP1Link dumbellTensors’
+      In the expression: p1UpdatesLHS $ sunP1Link dumbellTensors
+      In an equation for ‘it’:
+          it = p1UpdatesLHS $ sunP1Link dumbellTensors
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> p1UpdatesLHS $ sunP1Link dumbellTensors
+Just [((0,0),(1,2)),((0,1),(1,1))]
+λ> rewire dumbellTensors (p1UpdatesLHS $ sunP1Link dumbellTensors)
+
+<interactive>:5542:8-21: error:
+    • Couldn't match expected type ‘Maybe Tensors’
+                  with actual type ‘Tensors’
+    • In the first argument of ‘rewire’, namely ‘dumbellTensors’
+      In the expression:
+        rewire dumbellTensors (p1UpdatesLHS $ sunP1Link dumbellTensors)
+      In an equation for ‘it’:
+          it
+            = rewire dumbellTensors (p1UpdatesLHS $ sunP1Link dumbellTensors)
+λ> rewire (Just dumbellTensors) (p1UpdatesLHS $ sunP1Link dumbellTensors)
+Just (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))]))
+λ> fromCoeffs [0]
+LaurentPolynomial.Cons 0 [0]
+λ> fromCoeffs [1]
+LaurentPolynomial.Cons 0 [1]
+λ> fromCoeffs [3]
+LaurentPolynomial.Cons 0 [3]
+λ> fromCoeffs [0,1,0]
+LaurentPolynomial.Cons 0 [0,1,0]
+λ> x = fromCoeffs [0,1,0]
+λ> x + x
+
+<interactive>:5551:1-5: error:
+    • Non type-variable argument in the constraint: Num (T a)
+      (Use FlexibleContexts to permit this)
+    • When checking the inferred type
+        it :: forall a. (Num a, Num (T a)) => T a
+λ> y = x + x
+
+<interactive>:5552:1-9: error:
+    • Non type-variable argument in the constraint: Num (T a)
+      (Use FlexibleContexts to permit this)
+    • When checking the inferred type
+        y :: forall a. (Num a, Num (T a)) => T a
+λ> add x x
+LaurentPolynomial.Cons 0 [0,2,0]
+λ> mul x x
+LaurentPolynomial.Cons 0 [0,0,1,0,0]
+λ> mul (mul x x) x
+LaurentPolynomial.Cons 0 [0,0,0,1,0,0,0]
+λ> x = fromShiftCoeffs -1 [1]
+
+<interactive>:5558:1-26: error:
+    • Non type-variable argument
+        in the constraint: Num ([a1] -> Int -> [a2] -> T a2)
+      (Use FlexibleContexts to permit this)
+    • When checking the inferred type
+        x :: forall a1 a2.
+             (Num a1, Num ([a1] -> Int -> [a2] -> T a2),
+              Num (Int -> [a2] -> T a2)) =>
+             Int -> [a2] -> T a2
+λ> x = fromShiftCoeffs -1 [1]
+
+<interactive>:5561:1-26: error:
+    • Non type-variable argument
+        in the constraint: Num ([a1] -> Int -> [a2] -> T a2)
+      (Use FlexibleContexts to permit this)
+    • When checking the inferred type
+        x :: forall a1 a2.
+             (Num a1, Num ([a1] -> Int -> [a2] -> T a2),
+              Num (Int -> [a2] -> T a2)) =>
+             Int -> [a2] -> T a2
+λ> shift 1 (fromCoeffs [1])
+LaurentPolynomial.Cons 1 [1]
+λ> shift -1 (fromCoeffs [1])
+
+<interactive>:5564:1-25: error:
+    • Non type-variable argument
+        in the constraint: Num (T a1 -> Int -> T a2 -> T a2)
+      (Use FlexibleContexts to permit this)
+    • When checking the inferred type
+        it :: forall a1 a2.
+              (Num a1, Num (T a1 -> Int -> T a2 -> T a2),
+               Num (Int -> T a2 -> T a2)) =>
+              Int -> T a2 -> T a2
+λ> div (fromCoeffs [1]) (fromCoeffs [0,1])
+
+<interactive>:5568:1-3: error:
+    Ambiguous occurrence ‘div’
+    It could refer to either ‘Prelude.div’,
+                             imported from ‘Prelude’ at tensor-map.hs:1:1
+                             (and originally defined in ‘GHC.Real’)
+                          or ‘LP.div’,
+                             imported from ‘MathObj.LaurentPolynomial’ at tensor-map.hs:3:1-38
+λ> LP.div (fromCoeffs [1]) (fromCoeffs [0,1])
+LaurentPolynomial.Cons -1 [1.0]
+λ> shift (-1) (fromCoeffs [1])
+LaurentPolynomial.Cons -1 [1]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[TensorProduct (LaurentPolynomial.Cons 0 [1]) (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))])),TensorProduct (LaurentPolynomial.Cons -1 [1]) (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))]))]
+λ> : concat
+Syntax: :complete repl [<range>] <quoted-string-to-complete>
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+*** Exception: Tensor.hs:130:1-83: Non-exhaustive patterns in function updatePointerAt
+
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+
+Tensor.hs:177:22-28: error:
+    • Couldn't match expected type ‘[a]’ with actual type ‘Maybe a0’
+    • In the expression: Nothing
+      In an equation for ‘vsIDXsToWipe’: vsIDXsToWipe _ = Nothing
+      In an equation for ‘decomposeP1’:
+          decomposeP1 (TensorProduct _ tensors)
+            = v0 ++ v1
+            where
+                link = sunP1Link tensors
+                updatesLHS = p1UpdatesLHS link
+                updatesRHS = p1UpdatesRHS link
+                fromVSIDXs updates = [from | ((from, _), _) <- updates]
+                ....
+    • Relevant bindings include
+        vsIDXsToWipe :: Maybe [((a, b), (a, b1))] -> [a]
+          (bound at Tensor.hs:176:5)
+    |
+177 |     vsIDXsToWipe _ = Nothing
+    |                      ^^^^^^^
+Failed, no modules loaded.
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+*** Exception: Tensor.hs:130:1-83: Non-exhaustive patterns in function updatePointerAt
+
+λ> putStrLn "hello"
+hello
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> putStrLn "hello"
+hello
+λ> decomposeP1 dumbell
+[]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+
+Tensor.hs:191:1-4: error:
+    Parse error: module header, import declaration
+    or top-level declaration expected.
+    |
+191 | main
+    | ^^^^
+Failed, no modules loaded.
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[TensorProduct (LaurentPolynomial.Cons 0 [1]) (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))]))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[TensorProduct (LaurentPolynomial.Cons 0 [1]) (Tensors (fromList [(0,Tensor (fromList [(0,Pointer (1,2) Down),(1,Pointer (1,1) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (0,1) Down),(2,Pointer (0,0) Up)]))]))]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+
+Tensor.hs:131:1-55: warning: [-Woverlapping-patterns]
+    Pattern match is redundant
+    In an equation for ‘updatePointerAt’:
+        updatePointerAt (Just (Pointer _ edgeType)) _ = ...
+    |
+131 | updatePointerAt (Just (Pointer _ edgeType)) _ = Nothing
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+*** Exception: Tensor.hs:(130,1)-(131,55): Non-exhaustive patterns in function updatePointerAt
+
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[]
+λ> link = sunP1Link dumbellTensors
+λ> link
+Just ((0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)])))
+λ> p1UpdatesLHS link
+Just [((0,0),(1,2)),((0,1),(1,1))]
+λ> fromVSIDXs updates = [ from | ((from, _), _) <- updates]
+λ> updates LHS = p1UpdatesLHS link
+
+<interactive>:5607:9-11: error:
+    Not in scope: data constructor ‘LHS’
+λ> updatesLHS = p1UpdatesLHS link
+λ> updatesLHS
+Just [((0,0),(1,2)),((0,1),(1,1))]
+λ> fromVSIDXs updatesLHS
+
+<interactive>:5612:12-21: error:
+    • Couldn't match expected type ‘[((a, b10), b20)]’
+                  with actual type ‘Maybe [((Int, Int), (Int, Int))]’
+    • In the first argument of ‘fromVSIDXs’, namely ‘updatesLHS’
+      In the expression: fromVSIDXs updatesLHS
+      In an equation for ‘it’: it = fromVSIDXs updatesLHS
+    • Relevant bindings include
+        it :: [a] (bound at <interactive>:5612:1)
+λ> fromVSIDXs (Just updates) = [ from | ((from, _), _) <- updates]
+λ> fromVSIDXs updatesLHS
+[0,0]
+λ> fromVSIDXs (Just updates) = [ from | ((from, _), _) <- updates]
+λ> toVSIDXs (Just updates) = [ to | (_, (to, _)) <- updates]
+λ> vsIDXsToWipe updates = (fromVSIDXs updates) ++ (toVSIDXs updates)
+λ> vsIDXsToWipe updatesLHS
+[0,0,1,1]
+λ> vsIDXsToWipe updates = nub $ (fromVSIDXs updates) ++ (toVSIDXs updates)
+λ> vsIDXsToWipe updatesLHS
+[0,1]
+λ> vsIDXsToWipe updatesLHS
+[0,1]
+λ> wipeTensors tensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5626:13-19: error:
+    • Variable not in scope: tensors :: Tensors
+    • Perhaps you meant one of these:
+        data constructor ‘Tensors’ (imported from Tensor),
+        data constructor ‘Tensor’ (imported from Tensor)
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+Tensors (fromList [(0,Tensor (fromList [])),(1,Tensor (fromList []))])
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> decomposeP1 dumbell
+[]
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+
+Tensor.hs:184:56-58: error:
+    • Couldn't match expected type ‘Tensors’
+                  with actual type ‘Maybe Tensors’
+    • In the second argument of ‘TensorProduct’, namely ‘lhs’
+      In the expression: TensorProduct (fromCoeffs [1]) lhs
+      In the expression: [TensorProduct (fromCoeffs [1]) lhs]
+    |
+184 |       Just tensors -> [TensorProduct  (fromCoeffs [1]) lhs]
+    |                                                        ^^^
+Failed, no modules loaded.
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5636:1-11: error:
+    Variable not in scope: wipeTensors :: t0 -> t1 -> t
+
+<interactive>:5636:13-26: error:
+    Variable not in scope: dumbellTensors
+
+<interactive>:5636:29-40: error:
+    Variable not in scope: vsIDXsToWipe :: t2 -> t1
+
+<interactive>:5636:42-51: error: Variable not in scope: updatesLHS
+λ> :l ten
+target ‘ten’ is not a module name or a source file
+λ> :l tensor-map.hs
+[1 of 2] Compiling Tensor           ( Tensor.hs, interpreted )
+[2 of 2] Compiling Main             ( tensor-map.hs, interpreted )
+Ok, two modules loaded.
+Collecting type info for 2 module(s) ... 
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5640:29-40: error:
+    Variable not in scope: vsIDXsToWipe :: t0 -> [Int]
+
+<interactive>:5640:42-51: error:
+    • Variable not in scope: updatesLHS
+    • Perhaps you meant ‘p1UpdatesLHS’ (imported from Tensor)
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5641:29-40: error:
+    Variable not in scope: vsIDXsToWipe :: t0 -> [Int]
+
+<interactive>:5641:42-51: error:
+    • Variable not in scope: updatesLHS
+    • Perhaps you meant ‘p1UpdatesLHS’ (imported from Tensor)
+λ> dumbellTensors
+Tensors (fromList [(0,Tensor (fromList [(0,Pointer (0,1) Down),(1,Pointer (0,0) Up),(2,Pointer (1,0) Gluon)])),(1,Tensor (fromList [(0,Pointer (0,2) Gluon),(1,Pointer (1,2) Down),(2,Pointer (1,1) Up)]))])
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+    fromVSIDXs (Just updates) = [ from | ((from, _), _) <- updates]
+    toVSIDXs (Just updates) = [ to | (_, (to, _)) <- updates]
+    vsIDXsToWipe updates = nub $ (fromVSIDXs updates) ++ (toVSIDXs updates)
+Some flags have not been recognized: prompt2, 
+*Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| 
+<interactive>:5646:29-51: error:
+    Parse error in pattern: vsIDXsToWipe
+Some flags have not been recognized: prompt2, λ| 
+λ> 
+    fromVSIDXs (Just updates) = [ from | ((from, _), _) <- updates]
+    toVSIDXs (Just updates) = [ to | (_, (to, _)) <- updates]
+    vsIDXsToWipe updates = nub $ (fromVSIDXs updates) ++ (toVSIDXs updates)
+Some flags have not been recognized: prompt2, 
+*Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| *Main Data.Map Data.List| Some flags have not been recognized: prompt2, λ| 
+λ> fromVSIDXs (Just updates) = [ from | ((from, _), _) <- updates]
+λ> toVSIDXs (Just updates) = [ to | (_, (to, _)) <- updates]
+λ> vsIDXsToWipe updates = nub $ (fromVSIDXs updates) ++ (toVSIDXs updates)
+λ> wipeTensors tensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5664:13-19: error:
+    • Variable not in scope: tensors :: Tensors
+    • Perhaps you meant one of these:
+        data constructor ‘Tensors’ (imported from Tensor),
+        data constructor ‘Tensor’ (imported from Tensor)
+
+<interactive>:5664:35-44: error:
+    • Variable not in scope:
+        updatesLHS :: Maybe [((Int, b10), (Int, b0))]
+    • Perhaps you meant ‘p1UpdatesLHS’ (imported from Tensor)
+λ> wipeTensors tensors (vsIDXsToWipe updatesLHS)wipeTensors tensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5672:13-19: error:
+    • Variable not in scope: tensors :: Tensors
+    • Perhaps you meant one of these:
+        data constructor ‘Tensors’ (imported from Tensor),
+        data constructor ‘Tensor’ (imported from Tensor)
+λ> wipeTensors tensors (vsIDXsToWipe updatesLHS)
+
+<interactive>:5673:13-19: error:
+    • Variable not in scope: tensors :: Tensors
+    • Perhaps you meant one of these:
+        data constructor ‘Tensors’ (imported from Tensor),
+        data constructor ‘Tensor’ (imported from Tensor)
+λ> wipeTensors dumbellTensors (vsIDXsToWipe updatesLHS)
+Tensors (fromList [(0,Tensor (fromList [])),(1,Tensor (fromList []))])
 λ> 
