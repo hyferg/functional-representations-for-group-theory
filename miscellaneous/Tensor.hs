@@ -34,16 +34,17 @@ mappedKeys :: Tensor -> [(Int, Int)]
 uniqueVsKeys :: Tensor -> [Int]
 tensorPairs :: Tensors -> [(Tensor, Tensor)]
 tensorMapPairs :: Tensors -> [((Int, Tensor), (Int, Tensor))]
+justPointersMap :: Tensor -> Maybe (Map Int Pointer)
+getPointersMap :: Int -> Tensors -> Maybe (Map Int Pointer)
+updatePointer :: (Int, Int) -> Pointer -> Maybe Pointer
+pullTensorsMap :: Tensors -> Map Int Tensor
+rewireSingle :: ((Int, Int), (Int, Int)) -> Tensors -> Maybe Tensors
+rewireDual :: ((Int, Int), (Int, Int)) -> Tensors -> Maybe Tensors
+
+getTensor :: Int -> Tensors -> Maybe Tensor
 wipeTensor :: Tensors -> Int -> Tensors
 wipeTensors :: Tensors -> [Int] -> Tensors
-getTensor :: Tensors -> Int -> Maybe Tensor
-justPointersMap :: Tensor -> Maybe (Map Int Pointer)
-getPointersMap :: Tensors -> Int -> Maybe (Map Int Pointer)
-updatePointerAt :: Maybe Pointer -> (Int, Int) -> Maybe Pointer
-pullTensorsMap :: Tensors -> Map Int Tensor
-rewireSingle :: ((Int, Int), (Int, Int)) -> Maybe Tensors -> Maybe Tensors
-rewireDual :: Tensors -> ((Int, Int), (Int, Int)) -> Maybe Tensors
-rewire :: Maybe Tensors -> [((Int,Int),(Int,Int))] -> Maybe Tensors
+rewire :: [((Int,Int),(Int,Int))] -> Tensors -> Maybe Tensors
 
 
 isGluon (Pointer _ Gluon) = True
@@ -78,44 +79,44 @@ wipeTensors tensors vsIDXs
     (idx:idxs) = vsIDXs
     newTensors = wipeTensor tensors idx
 
-getTensor (Tensors tensorsMap) vsIDX = Map.lookup vsIDX tensorsMap
+getTensor vsIDX (Tensors tensorsMap) = Map.lookup vsIDX tensorsMap
 
 justPointersMap (Tensor pointersMap) = Just pointersMap
 
-getPointersMap tensors vsIDX = pointersMap_
-  where
-    maybeTensor = getTensor tensors vsIDX
-    pointersMap_ = maybeTensor >>= justPointersMap
+getPointersMap vsIDX tensors = (getTensor vsIDX tensors) >>= justPointersMap
 
-updatePointerAt (Just (Pointer _ edgeType)) (i, j) = Just (Pointer (i, j) edgeType)
-updatePointerAt _ _ = Nothing
+updatePointer (i, j) (Pointer _ edgeType) = Just (Pointer (i, j) edgeType)
 
 pullTensorsMap (Tensors tensorsMap) = tensorsMap
 
-rewireSingle ((vsIDX, pIDX), newVals) (Just tensors) = newTensors
+rewireSingle ((vsIDX, pIDX), newVals) tensors = newTensors
   where
-    maybePointersMap = getPointersMap tensors vsIDX
-    newPointersMap = case maybePointersMap of
-      Nothing -> Nothing
-      Just pointersMap -> case updatePointerAt (Map.lookup pIDX pointersMap) newVals of
-        Nothing -> Nothing
-        Just pointer -> Just $ Map.insert pIDX pointer pointersMap
 
-    newTensor = case newPointersMap of
-      Nothing -> Nothing
-      Just pointersMap -> Just $ Tensor pointersMap
+    oldPointersMap = return tensors >>= getPointersMap vsIDX
 
-    newTensors = case newTensor of
-      Nothing -> Nothing
-      Just tensor -> Just $ Tensors $ Map.insert vsIDX tensor $ pullTensorsMap tensors
-rewireSingle _ _ = Nothing
+    newPointer = oldPointersMap >>= Map.lookup pIDX >>= updatePointer newVals
 
-rewireDual tensors (here, there) = rewireSingle (there, here) (rewireSingle (here, there) (Just tensors))
+    newPointersMap = (Map.insert pIDX) <$> newPointer <*> oldPointersMap
 
-rewire (Just tensors) links
+    buildTensor pointersMap = Just $ Tensor pointersMap
+
+    newTensor = newPointersMap >>= buildTensor
+
+    insertTensor tensors vsIDX tensor = Just $ Tensors $ Map.insert vsIDX tensor $ pullTensorsMap tensors
+
+    newTensors = newTensor >>= insertTensor tensors vsIDX
+
+
+
+
+
+rewireDual (here, there) tensors = return tensors >>=
+  rewireSingle (here, there) >>=
+  rewireSingle (there, here)
+
+rewire links tensors
   | length links == 1 = newTensors
-  | otherwise = rewire newTensors ls
+  | otherwise = newTensors >>= rewire otherLinks
   where
-    (l:ls) = links
-    newTensors = rewireDual tensors l
-rewire _ _ = Nothing
+    (link:otherLinks) = links
+    newTensors = return tensors >>= rewireDual link

@@ -1,4 +1,3 @@
-import SunP1
 import Tensor
 import Data.Map.Strict as Map
 import MathObj.LaurentPolynomial as LP
@@ -30,18 +29,12 @@ identity = fromCoeffs [1]
 dumbellTensors = Tensors $ Map.fromAscList $ zip [0,1..] [t0, t1]
 dumbell = TensorProduct identity dumbellTensors
 
-updatesLHS = return dumbellTensors >>= sunP1Link >>= p1UpdatesLHS
-maybeIdxs = return dumbellTensors >>= sunP1Link >>= vsIDXsToWipe
+{-
+((,),(,))
+-}
 
-scrubbedTensors = case maybeIdxs of
-                    Nothing -> Nothing
-                    Just idxs -> Just (wipeTensors dumbellTensors idxs)
-
-
-x = case updatesLHS of
-  Nothing -> []
-  Just a -> a
-
-
-liftTensors (Just tensors) = tensors
-t = rewireDual (liftTensors scrubbedTensors) (x !! 0)
+links :: [((Int, Int),(Int, Int))]
+links = [((0,0),(0,0)),
+         ((0,1),(0,1)),
+         ((0,2),(0,2))
+         ]
