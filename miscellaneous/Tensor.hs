@@ -1,13 +1,13 @@
 module Tensor  where
+import EdgeSpaces
+--data EdgeType = Up | Down | Gluon deriving (Show, Eq)
 import Data.Map.Strict as Map
 import Data.List
-import MathObj.LaurentPolynomial as LP
 data Newness a = Original a | New a deriving (Show)
-data EdgeType = Up | Down | Gluon deriving (Show, Eq)
 data Pointer = Pointer (Int, Int) EdgeType deriving (Show, Eq)
 data Tensor = Tensor (Map Int Pointer) deriving (Show, Eq)
 data Tensors = Tensors (Map Int Tensor) deriving (Show)
-data VectorSpace = TensorProduct (LP.T Int) Tensors deriving (Show)
+data VectorSpace poly = TensorProduct poly Tensors deriving (Show)
 
 class State s where
   (-:) :: s a -> (a -> a) -> s a
@@ -45,6 +45,7 @@ getTensor :: Int -> Tensors -> Maybe Tensor
 wipeTensor :: Tensors -> Int -> Tensors
 wipeTensors :: Tensors -> [Int] -> Tensors
 rewire :: [((Int,Int),(Int,Int))] -> Tensors -> Maybe Tensors
+
 
 
 isGluon (Pointer _ Gluon) = True
@@ -106,10 +107,6 @@ rewireSingle ((vsIDX, pIDX), newVals) tensors = newTensors
 
     newTensors = newTensor >>= insertTensor tensors vsIDX
 
-
-
-
-
 rewireDual (here, there) tensors = return tensors >>=
   rewireSingle (here, there) >>=
   rewireSingle (there, here)
@@ -120,3 +117,20 @@ rewire links tensors
   where
     (link:otherLinks) = links
     newTensors = return tensors >>= rewireDual link
+
+mapFromEdges :: [Edge] -> Map Int Tensor
+mapFromEdges edges = mapIntToTensor
+  where
+  indices = internalIndices edges
+  mapList = [ (i, (Tensor (fromList []))) | i <- indices ]
+  mapIntToTensor = fromList mapList
+
+tensorsFromEdges :: [Edge] -> Tensors
+tensorsFromEdges edges = Tensors $ mapFromEdges edges
+
+vectorSpaceFromEdgeSpace :: EdgeSpace poly -> VectorSpace poly
+vectorSpaceFromEdgeSpace (EdgeSpace poly edges) = (TensorProduct poly (tensorsFromEdges edges))
+
+--insertPointer :: []
+
+--rewireLinksFromEdgeList :: [Edge] -> [(Int, Int), (Int, Int)]

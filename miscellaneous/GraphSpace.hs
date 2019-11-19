@@ -7,4 +7,3 @@ class GraphSpace g where
   find :: g -> (EdgeSpace poly) -> index
   return :: g -> index -> g
   sub :: g -> index -> (EdgeSpace poly) -> g
-
