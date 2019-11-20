@@ -16,6 +16,14 @@ instance State Newness where
   (Original x) -: f = New (f x)
   (New x) -: _ = New (x)
 
+class Invert a where
+  invert :: a -> a
+
+instance Invert EdgeType where
+  invert Up = Down
+  invert Down = Up
+  invert Gluon = Gluon
+
 class EqEdgeType a where
   edgeEq :: a -> a -> Bool
 

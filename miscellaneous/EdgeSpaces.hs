@@ -17,6 +17,12 @@ tuplesToList :: [(a,a)] -> [a]
 tuplesToList ((a,b):xs) = a : b : tuplesToList xs
 tuplesToList _ = []
 
+anyIndices :: [Edge] -> [Int]
+anyIndices edges = indices
+  where
+    links = [ (i, j) | Edge _ (Node _ i, Node _ j) <- edges ]
+    indices = [ i | i <- tuplesToList links ]
+
 internalIndices :: [Edge] -> [Int]
 internalIndices edges = indices
   where
@@ -28,10 +34,6 @@ allInternalEdges edges = [
   Edge edgeType (Node iNodeType i, Node jNodeType j) |
   Edge edgeType (Node iNodeType i, Node jNodeType j) <- edges,
   iNodeType == I || jNodeType == I ]
-
-
-
-
 
 externalTensorLinks :: (EdgeSpace a) -> [(Int, Int)]
 externalTensorLinks (EdgeSpace _ edges) = [
