@@ -1,56 +1,77 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- FunctionalDependencies
 
-module Graph where
+module GraphV2 where
 import EdgeNode
-import Data.Map.Strict as Map
+import Data.Foldable as Foldable
+import qualified Data.Map.Strict as Map
+import Data.Sequence as Seq
 import Data.Maybe
-data Graph = Graph [Edge] (Map Int Node) deriving (Show)
+data Graph = Graph (Seq.Seq Edge) (Map.Map Int Node) deriving (Show)
+
+removeEdgeFromNode :: Int -> Int -> Graph -> Graph
+removeEdgeFromNode edgeIDX nodeIDX (Graph edges mapIntNode)
+  | Just graph <- newGraph = graph
+  | otherwise = Graph edges mapIntNode
+  where
+    newGraph = do
+      node <- getNode nodeIDX (Graph edges mapIntNode)
+      prunedNode <- Just $ removeEdgeIDXfromNode edgeIDX node
+      newMapIntNode <- Just $ Map.insert nodeIDX prunedNode mapIntNode
+      nodeType <- classifyNode nodeIDX (Graph edges newMapIntNode)
+      return $ setNodeType nodeIDX nodeType (Graph edges newMapIntNode)
+
+
+
+deleteEdge :: Int -> Graph -> Graph
+deleteEdge edgeIDX (Graph edges mapIntNode) = (Graph newEdges mapIntNode)
+  where
+    newEdges = Seq.update edgeIDX (Edge None (-1,-1)) edges
 
 getAllEdgesOfType :: EdgeType -> Graph -> [(Int, Edge)]
 getAllEdgesOfType targetEdgeType (Graph edges _) = [
   (i, (Edge edgeType b)) |
-  (i, (Edge edgeType b)) <- zip [0,1..] edges,
+  (i, (Edge edgeType b)) <- Prelude.zip [0,1..] (Foldable.toList edges),
   edgeType==targetEdgeType ]
 
 getAllNodeIDXs :: Graph -> [Int]
-getAllNodeIDXs (Graph _ mapIntNode) = keys mapIntNode
+getAllNodeIDXs (Graph _ mapIntNode) = Map.keys mapIntNode
 
 addEdgeToNode :: Int -> Int -> Graph -> Graph
 addEdgeToNode edgeIDX nodeIDX (Graph a mapIntNode) = (Graph a newMapIntNode)
   where
-    newMapIntNode = adjust (\node -> appendEdgeIDXtoNode edgeIDX node) nodeIDX mapIntNode
+    newMapIntNode = Map.adjust (\node -> appendEdgeIDXtoNode edgeIDX node) nodeIDX mapIntNode
 
 addNodeIfNotExists :: Int -> Node -> Graph -> Graph
 addNodeIfNotExists nodeIDX node (Graph edges mapIntNode) = (Graph edges newMapIntNode)
   where
-    newMapIntNode = insertWith (\_ oldNode -> oldNode) nodeIDX node mapIntNode
+    newMapIntNode = Map.insertWith (\_ oldNode -> oldNode) nodeIDX node mapIntNode
 
 emptyGraph :: Graph
-emptyGraph = Graph [] empty
+emptyGraph = Graph Seq.empty Map.empty
 
 getNode :: Int -> Graph -> Maybe Node
 getNode nodeIDX (Graph _ mapIntNode) = Map.lookup nodeIDX mapIntNode
 
 getEdge :: Int -> Graph -> Maybe Edge
 getEdge edgeIDX (Graph edges _)
-  | length edges <= edgeIDX = Nothing
-  | otherwise = Just $ edges !! edgeIDX
+  | Seq.length edges <= edgeIDX = Nothing
+  | otherwise = Just $ Seq.index edges edgeIDX
 
 addNode :: NodeType -> Graph -> (Int, Graph)
 addNode nodeType (Graph edges mapIntNode) = (index, Graph edges newMapIntNode)
   -- TODO assumes the map is zero indexed
   -- catch this maybe?
   where
-    index = size mapIntNode
-    newMapIntNode = insert index (Node nodeType []) mapIntNode
+    index = Map.size mapIntNode
+    newMapIntNode = Map.insert index (Node nodeType []) mapIntNode
 
 addEdge :: Edge -> Graph -> (Int, Graph)
 addEdge edge (Graph edges nodes) = (index, Graph newEdges nodes)
   -- TODO possibly 'throw error' if the nodes do not exist
   where
-    newEdges = edges ++ [edge]
-    index = -1 + length newEdges
+    newEdges = edges |> edge
+    index = -1 + Seq.length newEdges
 
 getEdgeIDXs :: Int -> Graph -> Maybe [Int]
 getEdgeIDXs nodeIDX graph = getNode nodeIDX graph >>=
@@ -66,7 +87,7 @@ getEdgeTypes nodeIDX graph = maybeEdgeTypes
     maybeEdgeTypes = do
       edgeIDXs <- getEdgeIDXs nodeIDX graph
       edgeTypes <- Just $ catMaybes [ getEdgeType e graph | e <- edgeIDXs]
-      out <- if length edgeTypes == length edgeIDXs then
+      out <- if Foldable.length edgeTypes == Foldable.length edgeIDXs then
         Just edgeTypes else Nothing
       return out
 
@@ -88,5 +109,5 @@ classifyNode nodeIDX graph
 setNodeType :: Int -> NodeType -> Graph -> Graph
 setNodeType nodeIDX nodeType (Graph edges mapIntNode) = Graph edges newMapIntNode
   where
-    newMapIntNode = adjust
+    newMapIntNode = Map.adjust
       (\(Node _ b) -> (Node nodeType b)) nodeIDX mapIntNode

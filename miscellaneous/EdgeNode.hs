@@ -13,6 +13,14 @@ instance Invertable EdgeType where
   invert Down = Up
   invert other = other
 
+updateNodeType :: NodeType -> Node -> Node
+updateNodeType nodeType (Node _ b) = Node nodeType b
+
+removeEdgeIDXfromNode :: Int -> Node -> Node
+removeEdgeIDXfromNode edgeIDX (Node _ edgeIDXs) = (Node Unidentified newEdgeIDXs)
+  where
+    newEdgeIDXs = [ i | i <- edgeIDXs, i /= edgeIDX]
+
 appendEdgeIDXtoNode :: Int -> Node -> Node
 appendEdgeIDXtoNode edgeIDX (Node a edgeIDXs) = Node a (edgeIDXs ++ [edgeIDX])
 

@@ -1,5 +1,5 @@
 import EdgeNode
-import Graph
+import GraphV2 as Graph
 import TensorGraph
 
 instance TensorGraph Graph where
@@ -13,6 +13,8 @@ instance TensorGraph Graph where
   addEdgeToNode = Graph.addEdgeToNode
   getAllNodeIDXs = Graph.getAllNodeIDXs
   getAllEdgesOfType = Graph.getAllEdgesOfType
+  removeEdgeFromNode = Graph.removeEdgeFromNode
+  deleteEdge = Graph.deleteEdge
 
 gEmpty = Graph.emptyGraph
 (nodeIDX, g0) = Graph.addNode GGG gEmpty

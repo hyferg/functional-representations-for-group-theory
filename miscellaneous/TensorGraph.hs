@@ -9,19 +9,16 @@ class TensorGraph g where
   addEdge :: Edge -> g -> (Int, g)
   addNodeIfNotExists :: Int -> Node -> g -> g
   addEdgeToNode :: Int -> Int -> g -> g
-
   addNode :: NodeType -> g -> (Int, g)
-  getEdgeType :: Int -> g -> Maybe EdgeType
   classifyNode :: Int -> g -> Maybe NodeType
   setNodeType :: Int -> NodeType -> g -> g
-
-  getAllNodeIDXs :: g -> [Int]
-
   getAllEdgesOfType :: EdgeType -> g -> [(Int, Edge)]
 
   deleteEdge :: Int -> g -> g
-  deleteNode :: Int -> g -> g
   removeEdgeFromNode :: Int -> Int -> g -> g
+
+  getAllNodeIDXs :: g -> [Int]
+  getEdgeType :: Int -> g -> Maybe EdgeType
 
 sunP1Edges :: (TensorGraph g) => g -> [(Int, Edge)]
 sunP1Edges graph = [ ie | ie <- gluonEdges graph, isSunP1 ie graph]
