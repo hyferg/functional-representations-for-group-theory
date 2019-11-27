@@ -52,3 +52,8 @@ sunP1EdgesListAlt = [
 g = buildGraph sunP1EdgesList (Graph.emptyGraph)
 gg = classifyAndSetNodes (Graph.getAllNodeIDXs g) g
 
+y = head $ sunP1Edges gg
+
+out = do
+  corners <- sunP1Corners y gg
+  return $ sunP1LHSEdges corners gg

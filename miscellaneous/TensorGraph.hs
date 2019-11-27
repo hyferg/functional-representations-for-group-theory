@@ -26,7 +26,16 @@ class TensorGraph g where
 
   --getNode :: Int -> g -> Maybe Node
   --getEdges :: Int -> g -> Maybe [Edge]
-  getOrientedEdges :: Int -> g -> Maybe [Edge]
+
+  getOrientedEdges :: Int -> g -> Maybe [(Int, Edge)]
+
+deleteEdges :: (TensorGraph g) => [Int] -> g -> g
+deleteEdges edgeIDXs graph
+  | length edgeIDXs == 0 = graph
+  | otherwise = deleteEdges otherEdgeIDXs newGraph
+  where
+    (edgeIDX:otherEdgeIDXs) = edgeIDXs
+    newGraph = deleteEdge edgeIDX graph
 
 gluonEdges :: (TensorGraph g) => g -> [(Int, Edge)]
 gluonEdges graph = [ ie | ie <- getAllEdgesOfType Gluon graph ]
@@ -78,4 +87,5 @@ classifyAndSetNodes nodeIDXs graph
   where
     (nodeIDX:otherNodeIDXs) = nodeIDXs
     newGraph = classifyAndSetNode nodeIDX graph
+
 

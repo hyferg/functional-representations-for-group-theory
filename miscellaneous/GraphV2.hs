@@ -101,12 +101,12 @@ orientEdge nodeIDX (Edge edgeType (a,b))
   | b == nodeIDX = flipEdge (Edge edgeType (a,b))
   | otherwise = (Edge edgeType (a,b))
 
-getOrientedEdge :: Int -> Int -> Graph -> Maybe Edge
+getOrientedEdge :: Int -> Int -> Graph -> Maybe (Int, Edge)
 getOrientedEdge edgeIDX nodeIDX graph = do
   edge <- getEdge edgeIDX graph
-  return $ orientEdge nodeIDX edge
+  return $ (edgeIDX, orientEdge nodeIDX edge)
 
-getOrientedEdges :: Int -> Graph -> Maybe [Edge]
+getOrientedEdges :: Int -> Graph -> Maybe [(Int, Edge)]
 getOrientedEdges nodeIDX graph = do
   idxs <- getEdgeIDXs nodeIDX graph
   return $  catMaybes [ getOrientedEdge idx nodeIDX graph | idx <- idxs]
