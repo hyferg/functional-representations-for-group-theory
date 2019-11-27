@@ -1,6 +1,7 @@
 import EdgeNode
 import GraphV2 as Graph
 import TensorGraph
+import SunP1
 
 instance TensorGraph Graph where
   emptyGraph = Graph.emptyGraph
@@ -15,6 +16,9 @@ instance TensorGraph Graph where
   getAllEdgesOfType = Graph.getAllEdgesOfType
   removeEdgeFromNode = Graph.removeEdgeFromNode
   deleteEdge = Graph.deleteEdge
+  replaceEdgeInNode = Graph.replaceEdgeInNode
+  --getEdges = Graph.getEdges
+  getOrientedEdges = Graph.getOrientedEdges
 
 gEmpty = Graph.emptyGraph
 (nodeIDX, g0) = Graph.addNode GGG gEmpty
@@ -33,6 +37,14 @@ sunP1EdgesList = [
   Edge Down (1,2),
   Edge Gluon (2,3),
   Edge Down (3,5),
+  Edge Up (3,4)
+             ]
+
+sunP1EdgesListAlt = [
+  Edge Up (0,2),
+  Edge Down (1,2),
+  Edge Gluon (2,3),
+  Edge Up (5,3),
   Edge Up (3,4)
              ]
 

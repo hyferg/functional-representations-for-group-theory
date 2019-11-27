@@ -13,8 +13,28 @@ instance Invertable EdgeType where
   invert Down = Up
   invert other = other
 
+filterOneEdge :: EdgeType -> [Edge] -> Maybe Edge
+filterOneEdge targetEdgeType edges
+  | length edgeMatch == 1 = Just $ head edgeMatch
+  | otherwise = Nothing
+  where
+    edgeMatch = [ (Edge edgeType (a,b)) |
+                  (Edge edgeType (a,b)) <- edges,
+                  targetEdgeType == edgeType ]
+
+
+
+flipEdge :: Edge -> Edge
+flipEdge (Edge edgeType (a,b)) = (Edge (invert edgeType) (b,a))
+
 updateNodeType :: NodeType -> Node -> Node
 updateNodeType nodeType (Node _ b) = Node nodeType b
+
+replaceEdgeIDXInNode :: Int -> Int -> Node -> Node
+replaceEdgeIDXInNode targetEdgeIDX newEdgeIDX (Node _ edgeIDXs) = (Node Unidentified newEdgeIDXs)
+  where
+    newEdgeIDXs = [ if i == targetEdgeIDX then newEdgeIDX else i | i <- edgeIDXs]
+
 
 removeEdgeIDXfromNode :: Int -> Node -> Node
 removeEdgeIDXfromNode edgeIDX (Node _ edgeIDXs) = (Node Unidentified newEdgeIDXs)
@@ -38,7 +58,6 @@ directedEdges edgeTypes = [ e | e <- edgeTypes,
 
 isClockLike :: [EdgeType] -> Bool
 isClockLike edgeTypes
-  -- TODO could use a better check to not accept [Down, Down, Gluon]
   | numEdges == 3 && numClockEdges == 2 = True
   | otherwise = False
   where

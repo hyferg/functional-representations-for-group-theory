@@ -20,21 +20,13 @@ class TensorGraph g where
   getAllNodeIDXs :: g -> [Int]
   getEdgeType :: Int -> g -> Maybe EdgeType
 
-sunP1Edges :: (TensorGraph g) => g -> [(Int, Edge)]
-sunP1Edges graph = [ ie | ie <- gluonEdges graph, isSunP1 ie graph]
+  -- IMPORTANT : make sure your new edge is already a part of the graph
+  -- otherwise nothing will happen
+  replaceEdgeInNode :: (Int, Int) -> Int -> g -> g
 
-isSunP1 :: (TensorGraph g) => (Int, Edge) -> g -> Bool
-isSunP1 (_, (Edge edgeType (lhsNodeIDX, rhsNodeIDX))) graph
-  | Just bool <- out = bool
-  | otherwise = False
-  where
-    out = do
-      lhs <- classifyNode lhsNodeIDX graph
-      rhs <- classifyNode rhsNodeIDX graph
-      nodesFormP1 <- Just $ (lhs, rhs) == (Clock, AntiClock) || (lhs, rhs) == (AntiClock, Clock)
-      edgeIsGluon <- Just $ edgeType == Gluon
-      return $ edgeIsGluon && nodesFormP1
-
+  --getNode :: Int -> g -> Maybe Node
+  --getEdges :: Int -> g -> Maybe [Edge]
+  getOrientedEdges :: Int -> g -> Maybe [Edge]
 
 gluonEdges :: (TensorGraph g) => g -> [(Int, Edge)]
 gluonEdges graph = [ ie | ie <- getAllEdgesOfType Gluon graph ]

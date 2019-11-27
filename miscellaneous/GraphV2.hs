@@ -9,6 +9,21 @@ import Data.Sequence as Seq
 import Data.Maybe
 data Graph = Graph (Seq.Seq Edge) (Map.Map Int Node) deriving (Show)
 
+
+-- Note : this will do nothing if the newEdgeIDX is not a part of the graph
+replaceEdgeInNode :: (Int, Int) -> Int -> Graph -> Graph
+replaceEdgeInNode (targetEdgeIDX, newEdgeIDX) nodeIDX (Graph edges mapIntNode)
+  | Just graph <- newGraph = graph
+  | otherwise = Graph (Seq.fromList []) Map.empty
+  where
+    newGraph = do
+      node <- getNode nodeIDX (Graph edges mapIntNode)
+      newNode <- Just $ replaceEdgeIDXInNode targetEdgeIDX newEdgeIDX node
+      newMapIntNode <- Just $ Map.insert nodeIDX newNode mapIntNode
+      nodeType <- classifyNode nodeIDX (Graph edges newMapIntNode)
+      return $ setNodeType nodeIDX nodeType (Graph edges newMapIntNode)
+
+
 removeEdgeFromNode :: Int -> Int -> Graph -> Graph
 removeEdgeFromNode edgeIDX nodeIDX (Graph edges mapIntNode)
   | Just graph <- newGraph = graph
@@ -20,8 +35,6 @@ removeEdgeFromNode edgeIDX nodeIDX (Graph edges mapIntNode)
       newMapIntNode <- Just $ Map.insert nodeIDX prunedNode mapIntNode
       nodeType <- classifyNode nodeIDX (Graph edges newMapIntNode)
       return $ setNodeType nodeIDX nodeType (Graph edges newMapIntNode)
-
-
 
 deleteEdge :: Int -> Graph -> Graph
 deleteEdge edgeIDX (Graph edges mapIntNode) = (Graph newEdges mapIntNode)
@@ -81,12 +94,36 @@ getEdgeType :: Int -> Graph -> Maybe EdgeType
 getEdgeType edgeIDX graph = getEdge edgeIDX graph >>=
   (\(Edge edgeType _) -> Just edgeType)
 
+
+
+orientEdge :: Int -> Edge -> Edge
+orientEdge nodeIDX (Edge edgeType (a,b))
+  | b == nodeIDX = flipEdge (Edge edgeType (a,b))
+  | otherwise = (Edge edgeType (a,b))
+
+getOrientedEdge :: Int -> Int -> Graph -> Maybe Edge
+getOrientedEdge edgeIDX nodeIDX graph = do
+  edge <- getEdge edgeIDX graph
+  return $ orientEdge nodeIDX edge
+
+getOrientedEdges :: Int -> Graph -> Maybe [Edge]
+getOrientedEdges nodeIDX graph = do
+  idxs <- getEdgeIDXs nodeIDX graph
+  return $  catMaybes [ getOrientedEdge idx nodeIDX graph | idx <- idxs]
+
+getOrientedEdgeType :: Int -> Int -> Graph -> Maybe EdgeType
+getOrientedEdgeType edgeIDX nodeIDX graph = do
+  edge <- getEdge edgeIDX graph
+  (Edge edgeType _) <- Just $ orientEdge nodeIDX edge
+  return edgeType
+
 getEdgeTypes :: Int -> Graph -> Maybe [EdgeType]
 getEdgeTypes nodeIDX graph = maybeEdgeTypes
   where
     maybeEdgeTypes = do
       edgeIDXs <- getEdgeIDXs nodeIDX graph
-      edgeTypes <- Just $ catMaybes [ getEdgeType e graph | e <- edgeIDXs]
+      edgeTypes <- Just $ catMaybes [
+        getOrientedEdgeType e nodeIDX graph | e <- edgeIDXs ]
       out <- if Foldable.length edgeTypes == Foldable.length edgeIDXs then
         Just edgeTypes else Nothing
       return out
@@ -101,10 +138,6 @@ classifyNode nodeIDX graph
   , isGGG edgeTypes = Just GGG
   | Just _ <- getEdgeTypes nodeIDX graph = Just Unidentified
   | otherwise = Nothing
-
--- setNodeType :: Int -> NodeType -> Graph -> Graph
--- setNodeType nodeIDX nodeType (Graph edges nodes) = out
---   where
 
 setNodeType :: Int -> NodeType -> Graph -> Graph
 setNodeType nodeIDX nodeType (Graph edges mapIntNode) = Graph edges newMapIntNode
