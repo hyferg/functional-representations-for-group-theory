@@ -1,23 +1,16 @@
 module SunP1 where
 
+import MathObj.LaurentPolynomial as LP
 import TensorGraph
 import EdgeNode
 
-import MathObj.LaurentPolynomial as LP
-data VectorSpace = VectorSpace (LP.T Int) 
-
---decomposeP1 :: (TensorGraph g) => (Int, Edge) -> g -> Maybe [VectorSpace]
-decomposeP1 (edgeIDX, edge) graph
-  | isSunP1 (edgeIDX, edge) graph = Just $ decompose (edgeIDX, edge)
-  | otherwise = Nothing
-
 --decomposeP1 :: (TensorGraph g) => g -> Maybe (VectorSpace, VectorSpace)
-decompose (edgeIDX, edge) graph = do
+decomposeP1 (edgeIDX, edge) graph = do
   lhsGraph <- workLHS (edgeIDX, edge) graph
   rhsGraph <- workRHS (edgeIDX, edge) graph
   return (
     ( fromCoeffs [1], lhsGraph ),
-    ( fromShiftCoeffs (-1) [1], rhsGraph )
+    ( LP.fromShiftCoeffs (-1) [1], rhsGraph )
     )
 
 
@@ -65,7 +58,6 @@ sunP1LHSEdges (((i,ii),(j,jj),(k,kk),(l,ll)),(_,_)) graph = gg
     (e1idx, g1) = addEdge e1 prunedGraph
     (e2idx, g2) = addEdge e2 g1
 
-
     gg = replaceEdgeInNode (ll, e2idx) l $
          replaceEdgeInNode (jj, e2idx) j $
          replaceEdgeInNode (kk, e1idx) k $
@@ -80,7 +72,7 @@ returns (i,j,k,l) (nodeIDX(^), nodeIDX(v))
 --sunP1Corners :: (TensorGraph g) => (Int, Edge) -> g -> Maybe ((Int,Int,Int,Int), (Int,Int))
 sunP1Corners (_, (Edge _ (lhsNodeIDX, rhsNodeIDX))) graph = do
       lhsEdges <- getOrientedEdges lhsNodeIDX graph
-      rhsEdges <- getOrientedEdges b graph
+      rhsEdges <- getOrientedEdges rhsNodeIDX graph
       (ii, Edge _ (_,i)) <- filterJustOneEdge Down lhsEdges
       (jj, Edge _ (_,j)) <- filterJustOneEdge Up lhsEdges
       (kk, Edge _ (_,k)) <- filterJustOneEdge Up rhsEdges

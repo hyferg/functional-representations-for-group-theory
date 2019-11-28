@@ -135,6 +135,8 @@ classifyNode nodeIDX graph
   , isAntiClock edgeTypes = Just AntiClock
   | Just edgeTypes <- getEdgeTypes nodeIDX graph
   , isGGG edgeTypes = Just GGG
+  | Just edgeTypes <- getEdgeTypes nodeIDX graph
+  , isGGChain edgeTypes = Just GG
   | Just _ <- getEdgeTypes nodeIDX graph = Just Unidentified
   | otherwise = Nothing
 

@@ -1,6 +1,9 @@
 module TensorGraph where
 import EdgeNode
 
+import MathObj.LaurentPolynomial as LP
+--data VectorSpace = VectorSpace (LP.T Int) 
+
 class TensorGraph g where
   emptyGraph :: g
 
@@ -12,6 +15,7 @@ class TensorGraph g where
   getAllEdgesOfType :: EdgeType -> g -> [(Int, Edge)]
 
   -- operations on nodes
+
   addNode :: NodeType -> g -> (Int, g)
   addNodeIfNotExists :: Int -> Node -> g -> g
   addEdgeToNode :: Int -> Int -> g -> g
@@ -24,6 +28,19 @@ class TensorGraph g where
   -- otherwise nothing will happen
   getOrientedEdges :: Int -> g -> Maybe [(Int, Edge)]
 
+decomposeRule edgeCheck decompose (edgeIDX, edge) graph
+  | edgeCheck (edgeIDX, edge) graph = Just $ decompose (edgeIDX, edge)
+  | otherwise = Nothing
+
+-- possibly not efficient if (length > 0) has to check more than 1 element
+nextEdgeOfType :: (TensorGraph g) => Int -> EdgeType -> g -> Maybe (Int, Edge)
+nextEdgeOfType prevEdgeIDX edgeType graph
+  | length rightEdges > 0 = Just $ head rightEdges
+  | otherwise = Nothing
+  where
+    edges = getAllEdgesOfType edgeType graph
+    rightEdges = filter (\(edgeIDX, _) -> edgeIDX > prevEdgeIDX) edges
+
 deleteEdges :: (TensorGraph g) => [Int] -> g -> g
 deleteEdges edgeIDXs graph
   | length edgeIDXs == 0 = graph
@@ -31,9 +48,6 @@ deleteEdges edgeIDXs graph
   where
     (edgeIDX:otherEdgeIDXs) = edgeIDXs
     newGraph = deleteEdge edgeIDX graph
-
-gluonEdges :: (TensorGraph g) => g -> [(Int, Edge)]
-gluonEdges graph = [ ie | ie <- getAllEdgesOfType Gluon graph ]
 
 addNodes :: (TensorGraph g) => [NodeType] -> g -> g
 addNodes nodeTypes graph

@@ -1,6 +1,6 @@
 module EdgeNode where
 
-data NodeType = GGG | Clock | AntiClock | Unidentified deriving (Show, Eq)
+data NodeType = GG | GGG | Clock | AntiClock | Unidentified deriving (Show, Eq)
 data Node = Node NodeType [Int] deriving (Show)
 data EdgeType = Up | Down | Gluon | None deriving (Show, Eq)
 data Edge = Edge EdgeType (Int, Int) deriving (Show)
@@ -72,3 +72,7 @@ isClock edgeTypes = isClockLike edgeTypes &&
 isAntiClock :: [EdgeType] -> Bool
 isAntiClock edgeTypes = isClockLike edgeTypes &&
   [Up, Down] == directedEdges edgeTypes
+
+
+isGGChain :: [EdgeType] -> Bool
+isGGChain edgeTypes = edgeTypes == [Gluon, Gluon]

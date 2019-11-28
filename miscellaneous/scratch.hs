@@ -2,6 +2,8 @@ import EdgeNode
 import GraphV2 as Graph
 import TensorGraph
 import SunP1
+import Chain
+import EdgeList
 
 instance TensorGraph Graph where
   emptyGraph = Graph.emptyGraph
@@ -20,40 +22,9 @@ instance TensorGraph Graph where
   --getEdges = Graph.getEdges
   getOrientedEdges = Graph.getOrientedEdges
 
-gEmpty = Graph.emptyGraph
-(nodeIDX, g0) = Graph.addNode GGG gEmpty
 
-peaceEdges = [
-  Edge Gluon (0,1),
-  Edge Gluon (0,3),
-  Edge Gluon (0,2),
-  Edge Gluon (1,2),
-  Edge Gluon (1,3),
-  Edge Gluon (2,3)
-             ]
+g_ = buildGraph chainEdges (Graph.emptyGraph)
+g = classifyAndSetNodes (Graph.getAllNodeIDXs g_) g_
 
-sunP1EdgesList = [
-  Edge Up (0,2),
-  Edge Down (1,2),
-  Edge Gluon (2,3),
-  Edge Down (3,5),
-  Edge Up (3,4)
-             ]
-
-sunP1EdgesListAlt = [
-  Edge Up (0,2),
-  Edge Down (1,2),
-  Edge Gluon (2,3),
-  Edge Up (5,3),
-  Edge Up (3,4)
-             ]
-
---g = buildGraph peaceEdges (Graph.emptyGraph)
-g = buildGraph sunP1EdgesList (Graph.emptyGraph)
-gg = classifyAndSetNodes (Graph.getAllNodeIDXs g) g
-
-y = head $ sunP1Edges gg
-
-out = do
-  corners <- sunP1Corners y gg
-  return $ sunP1LHSEdges corners gg
+e = nextEdgeOfType (-1) Gluon g
+es = Graph.getAllEdgesOfType Gluon g
