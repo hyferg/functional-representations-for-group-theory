@@ -9,7 +9,6 @@ import Data.Sequence as Seq
 import Data.Maybe
 data Graph = Graph (Seq.Seq Edge) (Map.Map Int Node) deriving (Show)
 
-
 -- Note : this will do nothing if the newEdgeIDX is not a part of the graph
 replaceEdgeInNode :: (Int, Int) -> Int -> Graph -> Graph
 replaceEdgeInNode (targetEdgeIDX, newEdgeIDX) nodeIDX (Graph edges mapIntNode)

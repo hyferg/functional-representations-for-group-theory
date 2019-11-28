@@ -13,8 +13,8 @@ instance Invertable EdgeType where
   invert Down = Up
   invert other = other
 
-filterOneEdge :: EdgeType -> [(i, Edge)] -> Maybe (i, Edge)
-filterOneEdge targetEdgeType edges
+filterJustOneEdge :: EdgeType -> [(i, Edge)] -> Maybe (i, Edge)
+filterJustOneEdge targetEdgeType edges
   | length edgeMatch == 1 = Just $ head edgeMatch
   | otherwise = Nothing
   where

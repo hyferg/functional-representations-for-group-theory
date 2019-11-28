@@ -4,24 +4,21 @@ import TensorGraph
 import EdgeNode
 
 import MathObj.LaurentPolynomial as LP
-data VectorSpace graph = VectorSpace (LP.T Int) graph
+data VectorSpace = VectorSpace (LP.T Int) 
+
+--decomposeP1 :: (TensorGraph g) => (Int, Edge) -> g -> Maybe [VectorSpace]
+decomposeP1 (edgeIDX, edge) graph
+  | isSunP1 (edgeIDX, edge) graph = Just $ decompose (edgeIDX, edge)
+  | otherwise = Nothing
 
 --decomposeP1 :: (TensorGraph g) => g -> Maybe (VectorSpace, VectorSpace)
-decomposeP1 graph = do
-  (edgeIDX, edge) <- maybeSunP1Edge graph
+decompose (edgeIDX, edge) graph = do
   lhsGraph <- workLHS (edgeIDX, edge) graph
   rhsGraph <- workRHS (edgeIDX, edge) graph
   return (
     ( fromCoeffs [1], lhsGraph ),
     ( fromShiftCoeffs (-1) [1], rhsGraph )
     )
-
-maybeSunP1Edge :: (TensorGraph g) => g -> Maybe (Int, Edge)
-maybeSunP1Edge graph
-  | length edges == 0 = Nothing
-  | otherwise = Just $ head edges
-  where
-    edges = sunP1Edges graph
 
 
 workLHS :: (TensorGraph g) => (Int, Edge) -> g -> Maybe g
@@ -75,23 +72,20 @@ sunP1LHSEdges (((i,ii),(j,jj),(k,kk),(l,ll)),(_,_)) graph = gg
          replaceEdgeInNode (ii, e1idx) i g2
 
 {-
-i    k
- ^  v
-j    l
+i        k
+ (^)  (v)
+j        l
 returns (i,j,k,l) (nodeIDX(^), nodeIDX(v))
 -}
 --sunP1Corners :: (TensorGraph g) => (Int, Edge) -> g -> Maybe ((Int,Int,Int,Int), (Int,Int))
-sunP1Corners (_, (Edge _ (a, b))) graph = do
-      lhsEdges <- getOrientedEdges a graph
+sunP1Corners (_, (Edge _ (lhsNodeIDX, rhsNodeIDX))) graph = do
+      lhsEdges <- getOrientedEdges lhsNodeIDX graph
       rhsEdges <- getOrientedEdges b graph
-      (ii, Edge _ (_,i)) <- filterOneEdge Down lhsEdges
-      (jj, Edge _ (_,j)) <- filterOneEdge Up lhsEdges
-      (kk, Edge _ (_,k)) <- filterOneEdge Up rhsEdges
-      (ll, Edge _ (_,l)) <- filterOneEdge Down rhsEdges
-      return $ (((i,ii),(j,jj),(k,kk),(l,ll)),(a,b))
-
-sunP1Edges :: (TensorGraph g) => g -> [(Int, Edge)]
-sunP1Edges graph = [ ie | ie <- gluonEdges graph, isSunP1 ie graph]
+      (ii, Edge _ (_,i)) <- filterJustOneEdge Down lhsEdges
+      (jj, Edge _ (_,j)) <- filterJustOneEdge Up lhsEdges
+      (kk, Edge _ (_,k)) <- filterJustOneEdge Up rhsEdges
+      (ll, Edge _ (_,l)) <- filterJustOneEdge Down rhsEdges
+      return $ (((i,ii),(j,jj),(k,kk),(l,ll)),(lhsNodeIDX, rhsNodeIDX))
 
 isSunP1 :: (TensorGraph g) => (Int, Edge) -> g -> Bool
 isSunP1 (_, (Edge edgeType (lhsNodeIDX, rhsNodeIDX))) graph

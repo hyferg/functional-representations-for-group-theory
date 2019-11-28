@@ -1,32 +1,27 @@
---{-# LANGUAGE MultiParamTypeClasses #-}
--- FunctionalDependencies
-
 module TensorGraph where
 import EdgeNode
 
 class TensorGraph g where
   emptyGraph :: g
+
+  -- operations on edges
+
   addEdge :: Edge -> g -> (Int, g)
-  addNodeIfNotExists :: Int -> Node -> g -> g
-  addEdgeToNode :: Int -> Int -> g -> g
-  addNode :: NodeType -> g -> (Int, g)
-  classifyNode :: Int -> g -> Maybe NodeType
-  setNodeType :: Int -> NodeType -> g -> g
+  deleteEdge :: Int -> g -> g
+  getEdgeType :: Int -> g -> Maybe EdgeType
   getAllEdgesOfType :: EdgeType -> g -> [(Int, Edge)]
 
-  deleteEdge :: Int -> g -> g
+  -- operations on nodes
+  addNode :: NodeType -> g -> (Int, g)
+  addNodeIfNotExists :: Int -> Node -> g -> g
+  addEdgeToNode :: Int -> Int -> g -> g
   removeEdgeFromNode :: Int -> Int -> g -> g
-
+  replaceEdgeInNode :: (Int, Int) -> Int -> g -> g
+  classifyNode :: Int -> g -> Maybe NodeType
+  setNodeType :: Int -> NodeType -> g -> g
   getAllNodeIDXs :: g -> [Int]
-  getEdgeType :: Int -> g -> Maybe EdgeType
-
   -- IMPORTANT : make sure your new edge is already a part of the graph
   -- otherwise nothing will happen
-  replaceEdgeInNode :: (Int, Int) -> Int -> g -> g
-
-  --getNode :: Int -> g -> Maybe Node
-  --getEdges :: Int -> g -> Maybe [Edge]
-
   getOrientedEdges :: Int -> g -> Maybe [(Int, Edge)]
 
 deleteEdges :: (TensorGraph g) => [Int] -> g -> g
