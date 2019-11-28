@@ -32,3 +32,8 @@ chainEdges = [
   Edge Gluon (1,2),
   Edge Gluon (2,3)
  ]
+
+bubbleEdges = [
+  Edge Gluon (0,1),
+  Edge Gluon (1,0)
+  ]

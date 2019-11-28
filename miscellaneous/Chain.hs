@@ -3,11 +3,8 @@ module Chain where
 import TensorGraph
 import EdgeNode
 
---decomposeChain :: (TensorGraph g) => (Int, Edge) -> g -> Maybe [VectorSpace]
 
---decomposeChain :: (TensorGraph g) => (Int, Edge) -> g -> Maybe [VectorSpace]
-
---decomposeChain :: (TensorGraph g) => (Int, Edge) -> g -> maybe VectorSpace
+decomposeChain :: (TensorGraph g) => (Int, Edge) -> g -> Maybe g
 decomposeChain (edgeIDX, edge) graph = do
   info <- chainInfo (edgeIDX, edge) graph
   return $ modifyChain info graph

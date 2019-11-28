@@ -28,6 +28,7 @@ class TensorGraph g where
   -- otherwise nothing will happen
   getOrientedEdges :: Int -> g -> Maybe [(Int, Edge)]
 
+
 decomposeRule edgeCheck decompose (edgeIDX, edge) graph
   | edgeCheck (edgeIDX, edge) graph = Just $ decompose (edgeIDX, edge)
   | otherwise = Nothing

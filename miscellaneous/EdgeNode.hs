@@ -3,7 +3,7 @@ module EdgeNode where
 data NodeType = GG | GGG | Clock | AntiClock | Unidentified deriving (Show, Eq)
 data Node = Node NodeType [Int] deriving (Show)
 data EdgeType = Up | Down | Gluon | None deriving (Show, Eq)
-data Edge = Edge EdgeType (Int, Int) deriving (Show)
+data Edge = Edge EdgeType (Int, Int) deriving (Show, Eq)
 
 class Invertable a where
   invert :: a -> a
@@ -12,6 +12,10 @@ instance Invertable EdgeType where
   invert Up = Down
   invert Down = Up
   invert other = other
+
+edgeEq :: Edge -> Edge -> Bool
+edgeEq e1 e2 = e1 == e2 || e1 == flipEdge e2
+
 
 filterJustOneEdge :: EdgeType -> [(i, Edge)] -> Maybe (i, Edge)
 filterJustOneEdge targetEdgeType edges

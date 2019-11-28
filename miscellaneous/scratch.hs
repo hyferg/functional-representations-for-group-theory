@@ -3,6 +3,7 @@ import GraphV2 as Graph
 import TensorGraph
 import SunP1
 import Chain
+import Bubble
 import EdgeList
 
 instance TensorGraph Graph where
@@ -23,7 +24,7 @@ instance TensorGraph Graph where
   getOrientedEdges = Graph.getOrientedEdges
 
 
-g_ = buildGraph chainEdges (Graph.emptyGraph)
+g_ = buildGraph bubbleEdges (Graph.emptyGraph)
 g = classifyAndSetNodes (Graph.getAllNodeIDXs g_) g_
 
 e = nextEdgeOfType (-1) Gluon g
