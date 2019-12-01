@@ -1,5 +1,4 @@
 module FlatGraph where
-import Data.Map.Strict as Map hiding (take)
 
 data EdgeType = R | B | G deriving (Show)
 type Nidx = Int
@@ -17,17 +16,39 @@ class FlatGraph g where
   allNodes_ :: g -> [Node]
   allEdges_ :: g -> [Edge]
 
-f :: (FlatGraph g) => g -> Maybe g
-f g = let
-  eIndices = 3 `freeEdgeIndicesOf_` g
-  nIndices = 3 `freeNodeIndicesOf_` g
 
-  e1 = Edge (eIndices !! 0) [nk,ni] R
-  e2 = Edge (eIndices !! 1) [ni,nj] B
-  e3 = Edge (eIndices !! 2) [nj,nk] G
+otherNode :: Edge -> Node -> Node
+otherNode (Edge _ [n1, n2] _) n
+  | n == n1 && n /= n2 ||
+    n == n2 && n /= n1
+    = head [ ni | ni <- [n1, n2], ni /= n ]
 
-  ni = Node (nIndices !! 0) [e1, e2]
-  nj = Node (nIndices !! 1) [e2, e3]
-  nk = Node (nIndices !! 2) [e3, e1]
+killChain :: (FlatGraph g) => Node -> g -> Maybe g
+killChain node g
+  | (Node _ [e1, e2]) <- node
+  = let
+      n1 = otherNode e1 node
+      n2 = otherNode e2 node
+      e3 = Edge (head $ 1 `freeEdgeIndicesOf_` g) [n1, n2] G
+    in return g >>= insertEdges_ [e3]
+  | otherwise = Nothing
 
-  in return g >>= insertNodes_ [ni,nj,nk] >>= insertEdges_ [e1,e2,e3]
+----
+
+instance Eq Node where
+  (==) (Node a _) (Node b _) = a == b
+
+instance Eq Edge where
+  (==) (Edge a _ _) (Edge b _ _) = a == b
+
+instance Show Node where
+  show (Node nIDX edges) =
+    (id "\nNode ") ++ show nIDX ++ id " "
+    ++ show [ (eType, eIDX) | (Edge eIDX _ eType) <- edges ] ++ id " "
+
+instance Show Edge where
+  show (Edge eIDX nodes eType) =
+    (id "\nEdge ") ++ show eIDX ++ id " "
+    ++ show [ nIDX | (Node nIDX _) <- nodes ] ++ id " "
+    ++ show eType
+    ++ " "

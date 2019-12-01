@@ -1,6 +1,7 @@
 import Data.Map.Strict as Map hiding (take)
 import Data.Maybe
 import FlatGraph
+import AddGraph
 
 data NodeP = NodeP [Eidx] deriving (Show)
 data EdgeP = EdgeP [Nidx] EdgeType deriving (Show)
@@ -9,7 +10,11 @@ data Graph = Graph (Map Nidx NodeP) (Map Eidx EdgeP) deriving (Show)
 emptyGraph :: Graph
 emptyGraph = Graph (Map.empty) (Map.empty)
 
-ggg = f emptyGraph
+out = do
+  g <- addRing emptyGraph
+  nodes <- Just $ allNodes_ g
+  edges <- Just $ allEdges_ g
+  killChain (nodes !! 0) g
 
 instance FlatGraph Graph where
     getNode_           = getNode
@@ -18,8 +23,8 @@ instance FlatGraph Graph where
     freeNodeIndicesOf_ = freeNodeIndices
     insertNodes_       = insertNodes
     insertEdges_       = insertEdges
-    allNodes_          = allNodes_
-    allEdges_          = allEdges_
+    allNodes_          = allNodes
+    allEdges_          = allEdges
 
 getNode :: Nidx -> Graph -> Maybe Node
 getNode nIDX (Graph min mie) = do
