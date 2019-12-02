@@ -1,3 +1,4 @@
+module Graph where
 import Data.Map.Strict as Map hiding (take)
 import Data.Maybe
 import FlatGraph
@@ -10,21 +11,14 @@ data Graph = Graph (Map Nidx NodeP) (Map Eidx EdgeP) deriving (Show)
 emptyGraph :: Graph
 emptyGraph = Graph (Map.empty) (Map.empty)
 
-out = do
-  g <- addRing emptyGraph
-  nodes <- Just $ allNodes_ g
-  edges <- Just $ allEdges_ g
-  killChain (nodes !! 0) g
-
 instance FlatGraph Graph where
     getNode_           = getNode
     getEdge_           = getEdge
     freeEdgeIndicesOf_ = freeEdgeIndices
     freeNodeIndicesOf_ = freeNodeIndices
-    insertNodes_       = insertNodes
-    insertEdges_       = insertEdges
     allNodes_          = allNodes
     allEdges_          = allEdges
+    work_              = work
 
 getNode :: Nidx -> Graph -> Maybe Node
 getNode nIDX (Graph min mie) = do
@@ -50,22 +44,6 @@ freeNodeIndices n (Graph map _)
   where
     (k, _) = Map.findMax map
 
-insertNodes :: [Node] -> Graph -> Maybe Graph
-insertNodes nodes graph
-  | length nodes == 0 = Just graph
-  | otherwise = graph' >>= insertNodes otherNodes
-  where
-    (node:otherNodes) = nodes
-    graph' = return graph >>= insertNode node
-
-insertEdges :: [Edge] -> Graph -> Maybe Graph
-insertEdges edges graph
-  | length edges == 0 = Just graph
-  | otherwise = graph' >>= insertEdges otherEdges
-  where
-    (edge:otherEdges) = edges
-    graph' = return graph >>= insertEdge edge
-
 allNodes :: Graph -> [Node]
 allNodes (Graph mapNode mapEdge) = catMaybes [
   getNode nIDX graph | nIDX <- keys mapNode ]
@@ -77,6 +55,17 @@ allEdges (Graph mapNode mapEdge) = catMaybes [
   getEdge eIDX graph | eIDX <- keys mapEdge ]
   where
     graph = (Graph mapNode mapEdge)
+
+work :: [Operation] -> Graph -> Maybe Graph
+work ops g = maybeRecursion ops (handleOperation) g
+
+handleOperation :: Operation -> Graph -> Maybe Graph
+handleOperation op g
+  | (InsertE edges) <- op = insertEdges edges g
+  | (RemoveE edges) <- op = removeEdges edges g
+  | (InsertN nodes) <- op = insertNodes nodes g
+  | (RemoveN nodes) <- op = removeNodes nodes g
+  | (SubEdge xs) <- op = subEdges xs g
 
 ----
 
@@ -101,3 +90,45 @@ insertNode (Node nIDX edges) (Graph mapNode mapEdge)
   where
     mapNode' = Map.insert nIDX (NodeP $ getEdgeIDXs edges) mapNode
     graph' = Graph mapNode' mapEdge
+
+removeEdge :: Edge -> Graph -> Maybe Graph
+removeEdge (Edge eIDX _ _) (Graph min mie)
+  = Just $ Graph min (Map.delete eIDX mie)
+
+removeNode :: Node -> Graph -> Maybe Graph
+removeNode (Node nIDX _) (Graph min mie)
+  = Just $ Graph (Map.delete nIDX min) mie
+
+subEdges xs g = maybeRecursion xs (subEdge) g
+
+subEdge :: (Node, Edge, Edge) -> Graph -> Maybe Graph
+subEdge (node, target, replacement) (Graph min mie)
+  | (Node nIDX _) <- node
+  , (Edge targetEdgeIDX _ _) <- target
+  , (Edge replaceEdgeIDX _ _) <- target
+  = do
+      (NodeP eIDXs) <- Map.lookup nIDX min
+      eIDXs' <- Just $ [
+        if i /= targetEdgeIDX then i else replaceEdgeIDX | i <- eIDXs]
+      min' <- Just $ Map.insert nIDX (NodeP eIDXs') min
+      return $ Graph min' mie
+
+maybeRecursion :: [a] -> (a -> obj -> Maybe obj) -> obj -> Maybe obj
+maybeRecursion xs f b
+  | length xs == 0 = Just b
+  | otherwise = b' >>= maybeRecursion otherX (f)
+  where
+    (x:otherX) = xs
+    b' = return b >>= f x
+
+removeNodes :: [Node] -> Graph -> Maybe Graph
+removeNodes ns g = maybeRecursion ns (removeNode) g
+
+removeEdges :: [Edge] -> Graph -> Maybe Graph
+removeEdges es g = maybeRecursion es (removeEdge) g
+
+insertNodes :: [Node] -> Graph -> Maybe Graph
+insertNodes ns g = maybeRecursion ns (insertNode) g
+
+insertEdges :: [Edge] -> Graph -> Maybe Graph
+insertEdges es g = maybeRecursion es (insertEdge) g
