@@ -1,0 +1,25 @@
+* SRC Files
+  
+** FlatGraph.hs
+   
+   Provides the FlatGraph typeclass which requires operations involving labelled recursive Node and Edge types be instantiated
+   
+** Graph.hs
+   
+   Instance of the FlatGraph typeclass which is a pointer simulation.
+    
+   - Graph (Map Int Node) (Map Int Edge)
+   - NodeP [Int]
+   - EdgeP [Int] EdgeType
+    
+   From any index entrypoint into the graph ledger, recursive data types are constructed.
+   
+   - Node [Edge]
+   - Edge [Node] EdgeType
+   
+     All operations on the graph ledger is expressed in terms of these recursive types.
+   
+** Decomposition.hs
+   
+   SunP1, remove gluon chain, kill tadpole, etc.
+   This higher order operations are constructed using the FlatGraph `interface`

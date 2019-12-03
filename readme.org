@@ -1,4 +1,0 @@
-* class graph
-  - getEdgeIndices : edgeType
-  - getEdge : index
-  - removeEdge : index
