@@ -3,13 +3,12 @@ import FlatGraph
 import AddGraph
 import MathObj.LaurentPolynomial as LP
 
-g = addRing emptyGraph
+g = addSunP1 emptyGraph
 x = (allNodes <$> g, allEdges_ <$> g)
 
-{-
-xx = do
-  g <- addRing emptyGraph
-  ns <- Just $ allNodes_ g
-  g' <- (return g >>= killChain (ns !! 1))
-  return (allNodes_ g', allEdges_ g')
--}
+out = do
+  sp1 <- addSunP1 emptyGraph
+  edges <- Just $ allEdges_ sp1
+  gluonEdges <- Just $ filter (\(Edge _ _ eType) -> eType==G) edges
+  return gluonEdges
+  sunP1 (gluonEdges !! 0) sp1
