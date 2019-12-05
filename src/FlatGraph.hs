@@ -1,10 +1,9 @@
 module FlatGraph where
 
 data EdgeType = U | D | G deriving (Show, Eq)
-type Nidx = Int
-type Eidx = Int
-data Node = Node Nidx [Edge]
-data Edge = Edge Eidx [Node] EdgeType
+type Label = Int
+data Node = Node Label [Edge]
+data Edge = Edge Label [Node] EdgeType
 
 data Operation = InsertE [Edge] | RemoveE [Edge] |
                  InsertN [Node] | RemoveN [Node] |
@@ -12,10 +11,10 @@ data Operation = InsertE [Edge] | RemoveE [Edge] |
                  Replace [(Edge, Edge)]
 
 class FlatGraph g where
-  getNode_ :: Nidx -> g -> Maybe Node
-  getEdge_ :: Eidx -> g -> Maybe Edge
-  freeEdgeIndicesOf_ :: Int -> g -> [Eidx]
-  freeNodeIndicesOf_ :: Int -> g -> [Nidx]
+  getNode_ :: Label -> g -> Maybe Node
+  getEdge_ :: Label -> g -> Maybe Edge
+  freeEdgeIndicesOf_ :: Int -> g -> [Label]
+  freeNodeIndicesOf_ :: Int -> g -> [Label]
   allNodes_ :: g -> [Node]
   allEdges_ :: g -> [Edge]
   work_ :: [Operation] -> g -> Maybe g
@@ -27,6 +26,10 @@ orientedDirectedTypes node = eTypes
   where
     (Node _ edges) = oriented node
     eTypes = filter (\e -> e/=G) $ edgeTypes edges
+
+chiralEq :: Node -> Node -> Bool
+chiralEq n1 n2 = isClock n1 && isClock n2 ||
+  isAntiClock n1 && isAntiClock n2
 
 isAntiClock :: Node -> Bool
 isAntiClock node
@@ -45,17 +48,17 @@ edgeType :: Edge -> EdgeType
 edgeType (Edge _ _ eType) = eType
 
 invert :: Edge -> Edge
-invert (Edge eIDX [n1, n2] eType) = Edge eIDX [n2, n1] (rotate eType)
+invert (Edge label [n1, n2] eType) = Edge label [n2, n1] (rotate eType)
 
 orientEdge :: Node -> Edge -> Edge
 orientEdge n0 edge
-  | (Edge eIDX [n1, n2] eType) <- edge
+  | (Edge _ [n1, _] _) <- edge
   = if n0==n1 then edge else invert edge
 
 oriented :: Node -> Node
 oriented node
-  | (Node nIDX edges) <- node
-  = Node nIDX (map (orientEdge node) edges)
+  | (Node label edges) <- node
+  = Node label (map (orientEdge node) edges)
 
 otherEdges :: Node -> Edge -> Maybe (Edge, Edge)
 otherEdges (Node _ edges) edge
@@ -90,14 +93,14 @@ instance Eq Edge where
 -- note that the nodes are oriented
 instance Show Node where
   show node =
-    (id "\nNode ") ++ show nIDX ++ id " "
-    ++ show [ (eType, eIDX) | (Edge eIDX _ eType) <- edges ] ++ id " "
+    (id "\nNode ") ++ show nL ++ id " "
+    ++ show [ (eType, eL) | (Edge eL _ eType) <- edges ] ++ id " "
     where
-      (Node nIDX edges) = oriented node
+      (Node nL edges) = oriented node
 
 instance Show Edge where
-  show (Edge eIDX nodes eType) =
-    (id "\nEdge ") ++ show eIDX ++ id " "
-    ++ show [ nIDX | (Node nIDX _) <- nodes ] ++ id " "
+  show (Edge eL nodes eType) =
+    (id "\nEdge ") ++ show eL ++ id " "
+    ++ show [ nL | (Node nL _) <- nodes ] ++ id " "
     ++ show eType
     ++ " "

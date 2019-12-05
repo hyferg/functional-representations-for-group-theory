@@ -23,3 +23,14 @@
    
    SunP1, remove gluon chain, kill tadpole, etc.
    This higher order operations are constructed using the FlatGraph `interface`
+
+* Tests
+  
+  - [ ] insertEdges
+  - [ ] removeEdges
+  - [ ] insertNodes
+  - [ ] removeNodes
+  - [ ] sunP1
+  - [ ] gluonExpansion
+  - [ ] tadPole
+  - [ ] killChain

@@ -7,10 +7,16 @@ data VectorSpace poly g = VS poly g deriving (Show)
 
 zero = fromCoeffs [0]
 plusOne = fromCoeffs [0]
+plusN = fromCoeffs [0]
 minusOne = fromCoeffs [0]
 minusOverN = fromCoeffs [0]
 
 -- FULL DECOMPOSITIONS --
+
+loop :: (FlatGraph g) => Node -> g -> Either [VectorSpace Poly g] g
+loop ni g
+  | Just g' <- loopSubGraph ni g = Left [VS plusN g']
+  | otherwise = Right g
 
 sunP1 :: (FlatGraph g) => Edge -> g -> Either [VectorSpace Poly g] g
 sunP1 emn g
@@ -36,6 +42,29 @@ killChain nj g
   | otherwise = Right g
 
 -- GRAPH DECOMPOSITIONS --
+
+loopSubGraph :: (FlatGraph g) => Node -> g -> Maybe g
+loopSubGraph ni g
+  | (Node _ [eai, ebi]) <- ni
+  , (Edge _ [_, _] _) <- eai
+  , (Edge _ [_, _] _) <- ebi
+  , (Just na) <- otherNode eai ni
+  , (Just nb) <- otherNode ebi ni
+  , na == nb
+  , nj <- na
+  , (Node _ [_, _]) <- nj
+  , chiralEq ni nj
+  = return g >>= work_ [
+      RemoveE [eai, ebi],
+      RemoveN [ni, nj] ]
+  | otherwise = Nothing
+
+formsSunP1 :: (FlatGraph g) => Edge -> g -> Bool
+formsSunP1 emn g
+  | (Edge _ [nm, nn] G) <- emn
+  , isClock nm && isClock nn || isAntiClock nm && isAntiClock nn
+  = True
+  | otherwise = False
 
 sunP1Split :: (FlatGraph g) => Edge -> g -> Maybe (g, g)
 sunP1Split emn g

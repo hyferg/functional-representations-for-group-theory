@@ -4,6 +4,8 @@ import Data.Maybe
 import FlatGraph
 import AddGraph
 
+type Eidx = Label
+type Nidx = Label
 data NodeP = NodeP [Eidx] deriving (Show)
 data EdgeP = EdgeP [Nidx] EdgeType deriving (Show)
 data Graph = Graph (Map Nidx NodeP) (Map Eidx EdgeP) deriving (Show)
@@ -19,6 +21,58 @@ instance FlatGraph Graph where
     allNodes_          = allNodes
     allEdges_          = allEdges
     work_              = work
+
+--filterOut :: Eidx -> (a,b) -> (a,b)
+filterOutEdge target (NodeP idxs) = NodeP $ Prelude.filter
+  (\e -> e/=target) idxs
+
+swapOutNode target replacement (EdgeP idxs eType) = EdgeP [
+  if nidx==target then replacement else nidx | nidx <- idxs] eType
+
+
+{-
+(n nidx) [i,eidx,k]
+to
+(n nidx) [i,k]
+-}
+removeEdgeFromNode :: Nidx -> Eidx -> Graph -> Maybe Graph
+removeEdgeFromNode nidx eidx (Graph mn me)
+  | Just (NodeP eIDXs) <- Map.lookup nidx mn
+  , NodeP eIDXs' <- filterOutEdge eidx (NodeP eIDXs)
+  , length eIDXs == 1 + length eIDXs'
+  = Just $ Graph (Map.insert nidx (NodeP eIDXs') mn) me
+  | otherwise = Nothing
+
+{-
+(e eidx) [..., nidx, ...]
+to
+(e eidx) [..., nidx', ...]
+-}
+swapNodeinEdge :: Eidx -> Nidx -> Eidx -> Graph -> Maybe Graph
+swapNodeinEdge eidx nidx nidx' (Graph mn me)
+  | Just (EdgeP nIDXs eType) <- Map.lookup eidx me
+  , EdgeP nIDXs' _ <- swapOutNode nidx nidx' (EdgeP nIDXs eType)
+  , length nIDXs == length nIDXs' && nIDXs /= nIDXs'
+  = Just $ Graph mn (Map.insert eidx (EdgeP nIDXs' eType) me)
+  | otherwise = Nothing
+
+--
+{-
+... (ni) __edge__ ...
+... (ni)   (nj) __edge__ ...
+note: (nj) is created
+pull :: Edge -> Node -> Graph -> Maybe (Node, Graph)
+-}
+pull edge node g
+  | (Edge eidx _ _) <- edge
+  , (Node nidx _) <- node
+  = do
+    nidx' <- Just $ head $ 1 `freeNodeIndicesOf_` g
+    return g >>=
+      removeEdgeFromNode nidx eidx >>=
+      insertNode (Node nidx' [edge]) >>=
+      swapNodeinEdge eidx nidx nidx'
+  | otherwise = Nothing
 
 getNode :: Nidx -> Graph -> Maybe Node
 getNode nIDX (Graph min mie) = do
@@ -99,13 +153,12 @@ removeNode :: Node -> Graph -> Maybe Graph
 removeNode (Node nIDX _) (Graph min mie)
   = Just $ Graph (Map.delete nIDX min) mie
 
-subEdges xs g = maybeRecursion xs (subEdge) g
 
 subEdge :: (Node, Edge, Edge) -> Graph -> Maybe Graph
 subEdge (node, target, replacement) (Graph min mie)
   | (Node nIDX _) <- node
   , (Edge targetEdgeIDX _ _) <- target
-  , (Edge replaceEdgeIDX _ _) <- target
+  , (Edge replaceEdgeIDX _ _) <- replacement
   = do
       (NodeP eIDXs) <- Map.lookup nIDX min
       eIDXs' <- Just $ [
@@ -120,6 +173,9 @@ maybeRecursion xs f b
   where
     (x:otherX) = xs
     b' = return b >>= f x
+
+subEdges :: [(Node, Edge, Edge)] -> Graph -> Maybe Graph
+subEdges xs g = maybeRecursion xs (subEdge) g
 
 removeNodes :: [Node] -> Graph -> Maybe Graph
 removeNodes ns g = maybeRecursion ns (removeNode) g

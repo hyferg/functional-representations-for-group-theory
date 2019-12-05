@@ -1,6 +1,22 @@
 module AddGraph where
 import FlatGraph
 
+handBag :: (FlatGraph g) => g -> Maybe g
+handBag g = let
+  eI = 3 `freeEdgeIndicesOf_` g
+  nI = 2 `freeNodeIndicesOf_` g
+
+  n1 = Node (nI !! 0) [eg, ej, ei]
+  n2 = Node (nI !! 1) [ei, ej, eg]
+
+  eg = Edge (eI !! 0) [n1, n2] G
+  ei = Edge (eI !! 1) [n1, n2] U
+  ej = Edge (eI !! 2) [n1, n2] D
+
+  in return g >>= work_ [
+  InsertN [n1, n2],
+  InsertE [eg, ei, ej] ]
+
 addSunP1 :: (FlatGraph g) => g -> Maybe g
 addSunP1 g = let
   eI = 5 `freeEdgeIndicesOf_` g
