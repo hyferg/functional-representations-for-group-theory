@@ -1,10 +1,68 @@
 module AddGraph where
 import FlatGraph
 
+pill :: (FlatGraph g) => g -> Maybe g
+pill g = let
+  eL = 3 `freeEdgeLabelsOf_` g
+  nL = 2 `freeNodeLabelsOf_` g
+
+  eij = Edge (eL !! 0) [ni, nj] D
+  eg  = Edge (eL !! 1) [ni, nj] G
+  eji = Edge (eL !! 2) [nj, ni] D
+
+  ni = Node (nL !! 0) [eij, eg, eji]
+  nj = Node (nL !! 1) [eji, eg, eij]
+
+  in return g >>= work_ [
+  InsertN [ni, nj], InsertE [eij, eg, eji]
+                        ]
+
+
+{-
+(ni) __eij__ (nj) __ejk__ (nk)
+-}
+tripleGluon :: (FlatGraph g) => g -> Maybe g
+tripleGluon g = let
+  eL = 3 `freeEdgeLabelsOf_` g
+  nL = 4 `freeNodeLabelsOf_` g
+
+  nc = Node (nL !! 3) [eci, ecj, eck]
+  ni = Node (nL !! 0) [eci]
+  nj = Node (nL !! 1) [ecj]
+  nk = Node (nL !! 2) [eck]
+
+  eci = Edge (eL !! 0) [nc,ni] G
+  ecj = Edge (eL !! 1) [nc,nj] G
+  eck = Edge (eL !! 2) [nc,nk] G
+
+  in return g >>= work_ [
+  InsertN [ni,nj,nk,nc],
+  InsertE [eci,ecj,eck] ]
+
+{-
+(ni) __eij__ (nj) __ejk__ (nk)
+-}
+line :: (FlatGraph g) => g -> Maybe g
+line g = let
+  eL = 2 `freeEdgeLabelsOf_` g
+  nL = 3 `freeNodeLabelsOf_` g
+
+  ni = Node (nL !! 0) [eij]
+  nj = Node (nL !! 1) [eij,ejk]
+  nk = Node (nL !! 2) [ejk]
+
+  eij = Edge (eL !! 0) [ni,nj] G
+  ejk = Edge (eL !! 1) [nj,nk] G
+
+  in return g >>= work_ [
+  InsertN [ni,nj,nk],
+  InsertE [eij,ejk] ]
+
+
 handBag :: (FlatGraph g) => g -> Maybe g
 handBag g = let
-  eI = 3 `freeEdgeIndicesOf_` g
-  nI = 2 `freeNodeIndicesOf_` g
+  eI = 3 `freeEdgeLabelsOf_` g
+  nI = 2 `freeNodeLabelsOf_` g
 
   n1 = Node (nI !! 0) [eg, ej, ei]
   n2 = Node (nI !! 1) [ei, ej, eg]
@@ -19,8 +77,8 @@ handBag g = let
 
 addSunP1 :: (FlatGraph g) => g -> Maybe g
 addSunP1 g = let
-  eI = 5 `freeEdgeIndicesOf_` g
-  nI = 6 `freeNodeIndicesOf_` g
+  eI = 5 `freeEdgeLabelsOf_` g
+  nI = 6 `freeNodeLabelsOf_` g
 
   e15 = Edge (eI !! 0) [n1, n5] U
   e25 = Edge (eI !! 1) [n2, n5] D
@@ -41,8 +99,8 @@ addSunP1 g = let
 
 addRing :: (FlatGraph g) => g -> Maybe g
 addRing g = let
-  eIDXs = 3 `freeEdgeIndicesOf_` g
-  nIDXs = 3 `freeNodeIndicesOf_` g
+  eIDXs = 3 `freeEdgeLabelsOf_` g
+  nIDXs = 3 `freeNodeLabelsOf_` g
 
   e1 = Edge (eIDXs !! 0) [n1, n2] G
   e2 = Edge (eIDXs !! 1) [n2, n3] G

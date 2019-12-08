@@ -5,18 +5,18 @@ type Label = Int
 data Node = Node Label [Edge]
 data Edge = Edge Label [Node] EdgeType
 
-data Operation = InsertE [Edge] | RemoveE [Edge] |
-                 InsertN [Node] | RemoveN [Node] |
-                 SubEdge [(Node, Edge, Edge)] |
-                 Replace [(Edge, Edge)]
+data Operation = InsertE [Edge] | InsertN [Node] |
+                 RemoveE [Edge] | Swap [(Node, Node)] |
+                 Merge [(Node, Node)]
 
 class FlatGraph g where
   getNode_ :: Label -> g -> Maybe Node
   getEdge_ :: Label -> g -> Maybe Edge
-  freeEdgeIndicesOf_ :: Int -> g -> [Label]
-  freeNodeIndicesOf_ :: Int -> g -> [Label]
+  freeEdgeLabelsOf_ :: Int -> g -> [Label]
+  freeNodeLabelsOf_ :: Int -> g -> [Label]
   allNodes_ :: g -> [Node]
   allEdges_ :: g -> [Edge]
+  split_ :: Node -> g -> Maybe ([Node], g)
   work_ :: [Operation] -> g -> Maybe g
 
 -- UTILS --
