@@ -17,6 +17,7 @@ class FlatGraph g where
   allNodes_ :: g -> [Node]
   allEdges_ :: g -> [Edge]
   split_ :: Node -> g -> Maybe ([Node], g)
+  safeSplit_ :: Node -> g -> Maybe ([Node], g)
   work_ :: [Operation] -> g -> Maybe g
 
 -- UTILS --

@@ -19,6 +19,7 @@ instance FlatGraph Graph where
     allNodes_          = allNodes
     allEdges_          = allEdges
     split_             = Graph.split
+    safeSplit_         = safeSplit
     work_              = work
 
 freeEdgeIndices :: Int -> Graph -> [Eidx]
@@ -58,6 +59,16 @@ allEdges (Graph mapNode mapEdge) = catMaybes [
     graph = (Graph mapNode mapEdge)
 
 
+-- from a stale node and graph, gets synced node and does the split
+safeSplit :: Node -> Graph -> Maybe ([Node], Graph)
+safeSplit staleNode g
+  | (Node nIDX _) <- staleNode
+  = do
+      freshNode <- getNode nIDX g
+      Graph.split freshNode g
+  | otherwise = Nothing
+
+-- assumes that the node and graph are in sync
 split :: Node -> Graph -> Maybe ([Node], Graph)
 split node g
   | (Node _ edges) <- node
@@ -71,18 +82,29 @@ work ops g = maybeRecursion ops (handleOperation) g
 
 
 -- TODO edgetype check the merge
+-- merges two vectors of type
+-- ... (ni) _etype_ (nj)   (nk) _etype (nl) ...
+-- to
+-- ... (ni) _etype_ (n') _etype_ (nl)
 merge :: (Node, Node) -> Graph -> Maybe Graph
-merge (ni, nj) g
-  | Node niIDX [eix] <- ni
-  , Node njIDX [ejx] <- nj
-  , Edge eixIDX _ _ <- eix
-  , Edge ejxIDX _ _ <- ejx
+merge (nj, nk) g
+  | Node njIDX [eij] <- nj
+  , Node nkIDX [ekl] <- nk
+  , (Edge ejiIDX [_, ni] ejiType) <- orientEdge nj eij
+  , (Edge eklIDX [_, nl] eklType) <- orientEdge nk ekl
+  --, (Graph mn me) <- g
   = do
-      nI <- Just $ head $ 1 `freeNodeIndices` g
-      nc <- Just $ Node nI [eix, ejx]
-      return g >>= work_ [InsertN [nc]] >>=
-        swapNidxInEidx niIDX nI eixIDX >>=
-        swapNidxInEidx njIDX nI ejxIDX
+      nidx' <- Just $ head $ 1 `freeNodeLabelsOf_` g
+      n' <- Just $ Node nidx' [eij, ekl]
+      --eji' = Edge ejiIDX [n', nk] ejiType
+      --ekl' = Edge eklIDX [n', nj] eklType
+      g' <- Just $  insertNode n' g -- $ insertEdge eji'  $ insertEdge ekl' g
+      return g' >>=
+        swapNidxInEidx nkIDX nidx' eklIDX >>=
+        swapNidxInEidx njIDX nidx' ejiIDX >>=
+        deleteNode nj >>= deleteNode nk
+
+-- >>= deleteNode nk
 
 {-
 (ni)      __eij__      (nj) : input
@@ -131,6 +153,7 @@ getEdgeIDXsIn (Node _ edges) = getEdgeIDXs edges
 swaps :: [(Node, Node)] -> Graph -> Maybe Graph
 swaps nns graph = maybeRecursion nns (swap) graph
 
+-- TODO ???
 swap :: (Node, Node) -> Graph -> Maybe Graph
 swap (target, replacement) graph
   | (Node ntIDX e0) <- target
@@ -227,6 +250,12 @@ filterOutEidxFromNidx eidx nidx (Graph mn me)
 swapOutNode :: Nidx -> Nidx -> EdgeP -> EdgeP
 swapOutNode target replacement (EdgeP idxs eType) = EdgeP [
   if nidx==target then replacement else nidx | nidx <- idxs] eType
+
+swapOutEdge :: Eidx -> Eidx -> NodeP -> NodeP
+swapOutEdge target replacement (NodeP idxs) = NodeP [
+  if eidx==target then replacement else eidx | eidx <- idxs]
+
+
 {-
 (e eidx) [..., nidx, ...] =>
 (e eidx) [..., nidx', ...]
@@ -238,3 +267,18 @@ swapNidxInEidx nidx nidx' eidx (Graph mn me)
   , length nIDXs == length nIDXs' && nIDXs /= nIDXs'
   = Just $ Graph mn (Map.insert eidx (EdgeP nIDXs' eType) me)
   | otherwise = Nothing
+
+swapEidxInNidx :: Eidx -> Eidx -> Nidx -> Graph -> Maybe Graph
+swapEidxInNidx eidx eidx' nidx (Graph mn me)
+  | Just (NodeP eIDXs) <- Map.lookup nidx mn
+  , NodeP eIDXs' <- swapOutEdge eidx eidx' (NodeP eIDXs)
+  , length eIDXs == length eIDXs' && eIDXs /= eIDXs'
+  = Just $ Graph (Map.insert nidx (NodeP eIDXs') mn) me
+  | otherwise = Nothing
+
+swapEdge :: Edge -> Edge -> Node -> Graph -> Maybe Graph
+swapEdge e e' n g
+  | (Edge eIDX _ _) <- e
+  , (Edge eIDX' _ _) <- e'
+  , (Node nIDX _) <- n
+  = swapEidxInNidx eIDX eIDX' nIDX g

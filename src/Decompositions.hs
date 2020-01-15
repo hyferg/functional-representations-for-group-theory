@@ -36,14 +36,12 @@ sunP1LHS emn g
   | (Edge _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = do
-      g'                     <- return g >>= work_ [RemoveE [emn]]
-      return g'
-      --return g''
---      ([nmTop, nmBot], g')  <- split_ nm g
---      ([nnBot, nnTop], g'') <- split_ nn g'
---      return g''
---      g'                     <- return g >>= work_ [RemoveE [emn]]
---      return g''' >>= work_ [Merge [(nmTop, nnTop), (nmBot, nnBot)]]
+      g' <- return g >>= work_ [RemoveE [emn]]
+      ([nmBot, nmTop], g'')  <- safeSplit_ nm g'
+      ([nnTop, nnBot], g''') <- safeSplit_ nn g''
+      --return g''' >>= work_ [Merge [(nmTop, nnTop)]]
+      return g''' >>= work_ [Merge [(nmTop, nnTop), (nmBot, nnBot)]]
+      --return g''' >>= work_ [Merge [(nmBot, nnBot)]]
 
 sunP1RHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1RHS emn g

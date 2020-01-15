@@ -1,6 +1,26 @@
 module AddGraph where
 import FlatGraph
 
+selfGluon :: (FlatGraph g) => g -> Maybe g
+selfGluon g = let
+  eL = 4 `freeEdgeLabelsOf_` g
+  nL = 3 `freeNodeLabelsOf_` g
+
+  eij = Edge (eL !! 0) [ni, nj] G
+  ejk = Edge (eL !! 1) [nj, nk] G
+  ekj = Edge (eL !! 2) [nk, nj] G
+  ekl = Edge (eL !! 3) [nk, nl] G
+
+  ni = Node (nL !! 0) [eij]
+  nj = Node (nL !! 1) [ejk, ejk]
+  nk = Node (nL !! 2) [ejk, ekj]
+  nl = Node (nL !! 3) [ekl]
+
+  in return g >>= work_ [
+  InsertN [ni, nj, nk, nl], InsertE [eij, ejk, ekj, ekl]
+                        ]
+
+
 pill :: (FlatGraph g) => g -> Maybe g
 pill g = let
   eL = 3 `freeEdgeLabelsOf_` g

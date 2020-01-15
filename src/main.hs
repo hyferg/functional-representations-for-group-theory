@@ -15,6 +15,7 @@ import MathObj.LaurentPolynomial as LP
 
 out = do
   g <- pill emptyGraph
+  return g
   eg <- Just $ (allEdges_ g) !! 1
   sunP1LHS eg g
 
