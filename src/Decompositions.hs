@@ -5,22 +5,33 @@ import MathObj.LaurentPolynomial as LP
 type Poly = LP.T Int
 data VectorSpace poly g = VS poly g deriving (Show)
 
+zero :: Poly
 zero = fromCoeffs [0]
+
+plusOne :: Poly
 plusOne = fromCoeffs [0]
+
+plusN :: Poly
 plusN = fromCoeffs [0]
+
+minusOne :: Poly
 minusOne = fromCoeffs [0]
+
+minusOverN :: Poly
 minusOverN = fromCoeffs [0]
+
+
 
 -- RULES --
 
-{-
-sunP1Decomposition :: (FlatGraph g) => Edge -> g -> Either [VectorSpace Poly g] g
-sunP1Decomposition emn g
+sunP1Decomposition :: (FlatGraph g) =>
+  (Edge, VectorSpace Poly g) ->
+  Maybe (Poly, [VectorSpace Poly g])
+sunP1Decomposition (emn, (VS poly g))
   | Just lhs <- sunP1LHS emn g
   , Just rhs <- sunP1RHS emn g
-  = Left [VS plusOne lhs, VS minusOverN rhs]
-  | otherwise = Right g
--}
+  = Just (poly, [VS plusOne lhs, VS minusOverN rhs])
+  | otherwise = Nothing
 
 gluonExpansion :: (FlatGraph g) => Node -> g -> Either [VectorSpace Poly g] g
 gluonExpansion node graph
@@ -31,7 +42,7 @@ gluonExpansion node graph
 
 -- GRAPH OPERATIONS --
 
---sunP1LHS :: (FlatGraph g) => Edge -> g -> Maybe g
+sunP1LHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1LHS emn g
   | (Edge _ [nm, nn] G) <- emn
   , chiralEq nm nn
@@ -39,9 +50,7 @@ sunP1LHS emn g
       g' <- return g >>= work_ [RemoveE [emn]]
       ([nmBot, nmTop], g'')  <- safeSplit_ nm g'
       ([nnTop, nnBot], g''') <- safeSplit_ nn g''
-      --return g''' >>= work_ [Merge [(nmTop, nnTop)]]
       return g''' >>= work_ [Merge [(nmTop, nnTop), (nmBot, nnBot)]]
-      --return g''' >>= work_ [Merge [(nmBot, nnBot)]]
 
 sunP1RHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1RHS emn g

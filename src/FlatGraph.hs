@@ -65,7 +65,7 @@ otherEdges :: Node -> Edge -> Maybe (Edge, Edge)
 otherEdges (Node _ edges) edge
   | length nodeEdges == 2 = Just (nodeEdges !! 0, nodeEdges !! 1)
   | otherwise = Nothing
-  where nodeEdges = [ e | e <- edges, e /= edge ]
+  where nodeEdges = [ e | e <- edges, e /=@= edge ]
 
 otherNode :: Edge -> Node -> Maybe Node
 otherNode edge n
@@ -88,8 +88,26 @@ instance Rotatable EdgeType where
 instance Eq Node where
   (==) (Node a _) (Node b _) = a == b
 
+{-
 instance Eq Edge where
   (==) (Edge a _ _) (Edge b _ _) = a == b
+-}
+
+class EqEdge e where
+  (=@=), (=-=) :: e -> e -> Bool
+  (/=@=), (/=-=) :: e -> e -> Bool
+
+  -- label equivalence
+  x /=@= y = not (x  =@= y)
+  x  =@= y = not (x /=@= y)
+
+  -- type equivalence
+  x /=-= y = not (x  =-= y)
+  x  =-= y = not (x /=-= y)
+
+instance EqEdge Edge where
+  (=@=) (Edge a _ _) (Edge b _ _) = a == b -- label equivalence
+  (=-=) (Edge _ _ a) (Edge _ _ b) = a == b -- type equivalence (not oriented)
 
 -- note that the nodes are oriented
 instance Show Node where
