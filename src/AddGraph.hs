@@ -17,9 +17,7 @@ selfGluon g = let
   nl = Node (nL !! 3) [ekl]
 
   in return g >>= work_ [
-  InsertN [ni, nj, nk, nl], InsertE [eij, ejk, ekj, ekl]
-                        ]
-
+  InsertN [ni, nj, nk, nl], InsertE [eij, ejk, ekj, ekl] ]
 
 pill :: (FlatGraph g) => g -> Maybe g
 pill g = let
@@ -34,9 +32,7 @@ pill g = let
   nj = Node (nL !! 1) [eji, eg, eij]
 
   in return g >>= work_ [
-  InsertN [ni, nj], InsertE [eij, eg, eji]
-                        ]
-
+  InsertN [ni, nj], InsertE [eij, eg, eji] ]
 
 {-
 (ni) __eij__ (nj) __ejk__ (nk)

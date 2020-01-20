@@ -7,7 +7,7 @@ data Edge = Edge Label [Node] EdgeType
 
 data Operation = InsertE [Edge] | InsertN [Node] |
                  RemoveE [Edge] | Swap [(Node, Node)] |
-                 Merge [(Node, Node)]
+                 Merge [(Node, Node)] | DeleteE [Edge] | DeleteN [Node]
 
 class FlatGraph g where
   getNode_ :: Label -> g -> Maybe Node
@@ -18,6 +18,7 @@ class FlatGraph g where
   allEdges_ :: g -> [Edge]
   split_ :: Node -> g -> Maybe ([Node], g)
   safeSplit_ :: Node -> g -> Maybe ([Node], g)
+  swapChain_ :: (Node, Edge, Node, Edge, Node) -> Edge -> g -> Maybe g
   work_ :: [Operation] -> g -> Maybe g
 
 -- UTILS --

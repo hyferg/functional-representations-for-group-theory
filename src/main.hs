@@ -4,84 +4,80 @@ import Decompositions
 import AddGraph
 import MathObj.LaurentPolynomial as LP
 import Data.Maybe
+import Data.Tree
 
---build :: (FlatGraph g) => (g -> Maybe g) -> VectorSpace Poly g
-build someGraphOn
-  | Just g <- someGraphOn emptyGraph = VS plusOne g
-  | otherwise = VS zero emptyGraph
+main :: IO ()
+main = return ()
+
+-- poly' == poly as a rule in general
+-- however one could imagine taking the input poly coeff and distributing it
+-- over the child nodes so there could potentially be an exception
+{-
+
+-}
+
+rep = putStr $ drawTree $ fmap show out
+
+foldNode :: (Poly, Int) -> [Poly] -> Poly
+foldNode (a, _) [b, c] = LP.mul a (LP.add b c)
+foldNode (a, _) [b] = LP.mul a b
+foldNode (a, _) [] = a
+
+--input = build pill
+input = build pill
+--out = buildNode input
+out = unfoldTree buildNode input
+
+buildNode :: (FlatGraph g) =>
+  VectorSpace Poly g ->
+  ((Poly, Int), [VectorSpace Poly g])
+buildNode preNode
+  | Left  (poly', vs) <- stack = ((poly', 0), vs)
+  | Right (VS poly' g) <- stack = ((poly', 1), [])
+  where
+    stack = return preNode >>= decompose
 
 decompose :: (FlatGraph g) =>
   VectorSpace Poly g ->
   Either (Poly, [VectorSpace Poly g])
                 (VectorSpace Poly g)
 decompose (VS poly g)
-  | length out >= 1 = Left $ head out
+  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
+  , out <- catMaybes $ map sunP1Rule input
+  , length out >= 1 = Left $ head out
+
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map shrinkChainRule input
+  , length out >= 1 = Left $ head out
+
+
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map loopRule input
+  , length out >= 1 = Left $ head out
+
   | otherwise = Right $ VS poly g
-  where
-    gluons = gluonEdges $ allEdges_ g
-    decompIn = [ (edge, (VS poly g)) | edge <- gluons ]
-    out = catMaybes $ map sunP1Decomposition decompIn
 
-gluonEdges :: [Edge] -> [Edge]
-gluonEdges edges = [ e | e <- edges, e =-= (Edge 0 [] G)]
-
---input :: (FlatGraph g) => VectorSpace Poly g
-input = build pill
-out = decompose input
-
-
--- (Left _):Either implies that some strat worked in the bind chain
--- (Right _):Either means no strat worked
 {-
 
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map gggRule input
+  , length out >= 1 = Left $ head out
 
-applyStrats :: (FlatGraph g) => g -> f -> Either [VectorSpace Poly g] g
-applyStrats g f = return g >>= f
-
-strat :: (FlatGraph g) => g -> Either [VectorSpace Poly g] g
-  | otherwise = Nothing
-  where
-
-out = do
-  g0 <- Decompositions.merge $ pill emptyGraph
-  eg <- Right $ (allEdges_ g0) !! 1
-  sunP1Decomposition eg g0
-
-
-
-gluonEdge :: [Edge] -> Maybe Edge
-gluonEdge edges
-  | 1 <= length gluons = Just $ head gluons
-  | otherwise = Nothing
-  where
-    gluons = gluonEdges edges
-
-buildNode :: (FlatGraph g) =>
-  (VectorSpace Poly g) -> (Poly, [VectorSpace Poly g])
-buildNode (VS poly g)
-  | [] == vs = (poly, [])
-  where
-    vs = []
-    strats = [sunP1Decomposition]
-    out = do
-      eg <- gluonEdge (allEdges_ g)
-      target <- return $ decompEdge (eg, g)
-      ds <- return $ map target strats
-      return [ v | Right a <- ds]
-
-
--- TODO fix Right rule []
-decompEdge :: (FlatGraph g) =>
-  (Edge, g) ->
-  (Edge -> g -> (Either [VectorSpace Poly g] g)) ->
-  [VectorSpace Poly g]
-decompEdge (e, g) f
-  | (Right _)        <- f e g = []
-  | (Left split)     <- f e g = split
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map tadpoleRule input
+  , length out >= 1 = Left $ head out
 
 
 -}
 
 
---nodes = allNodes_ <$> out
---edges = allEdges_ <$> out
+
+
+build :: (Graph -> Maybe Graph) -> VectorSpace Poly Graph
+build someGraphOn
+  | Just g <- someGraphOn emptyGraph = VS plusOne g
+  | otherwise = VS zero emptyGraph
+
+gluonEdges :: [Edge] -> [Edge]
+gluonEdges edges = [ e | e <- edges, e =-= (Edge 0 [] G)]
+

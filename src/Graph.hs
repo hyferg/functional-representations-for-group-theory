@@ -20,6 +20,7 @@ instance FlatGraph Graph where
     allEdges_          = allEdges
     split_             = Graph.split
     safeSplit_         = safeSplit
+    swapChain_         = swapChain
     work_              = work
 
 freeEdgeIndices :: Int -> Graph -> [Eidx]
@@ -143,6 +144,8 @@ handleOperation op g
   | RemoveE edges <- op = removeEdges edges g
   | Swap nns <- op = swaps nns g
   | Merge nijs <- op = merges nijs g
+  | DeleteN nodes <- op = deleteNodes nodes g
+  | DeleteE edges <- op = deleteEdges edges g
 
 getEdgeIDXs :: [Edge] -> [Eidx]
 getEdgeIDXs edges = [ eIDX | Edge eIDX _ _ <- edges ]
@@ -276,9 +279,30 @@ swapEidxInNidx eidx eidx' nidx (Graph mn me)
   = Just $ Graph (Map.insert nidx (NodeP eIDXs') mn) me
   | otherwise = Nothing
 
-swapEdge :: Edge -> Edge -> Node -> Graph -> Maybe Graph
-swapEdge e e' n g
+swapEIDX :: (Nidx, Eidx) -> Eidx -> Graph -> Maybe Graph
+swapEIDX (nidx, eidx) eidx' (Graph mn me) =
+  swapEidxInNidx eidx eidx' nidx (Graph mn me)
+
+swapIn :: (Graph, Node, Edge) -> Edge -> Maybe Graph
+swapIn (g, n, e) e'
   | (Edge eIDX _ _) <- e
   , (Edge eIDX' _ _) <- e'
   , (Node nIDX _) <- n
   = swapEidxInNidx eIDX eIDX' nIDX g
+
+-- TODO could be generalized to chains of any length
+swapChain :: (Node, Edge, Node, Edge, Node) -> Edge -> Graph -> Maybe Graph
+swapChain (ni, eij, nj, ejk, nk) eik g
+  = return g >>=
+    swapEIDX (nidx ni, eidx eij) (eidx eik) >>=
+    swapEIDX (nidx nk, eidx ejk) (eidx eik) >>=
+    deleteNode nj >>= deleteEdge eij >>= deleteEdge ejk >>=
+    maybeInsertEdge eik
+
+eidx :: Edge -> Eidx
+eidx (Edge idx _ _ ) = idx
+
+nidx :: Node -> Nidx
+nidx (Node idx _) = idx
+
+
