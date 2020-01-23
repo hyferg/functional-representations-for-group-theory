@@ -15,10 +15,10 @@ plusN :: Poly
 plusN = fromCoeffs [0,1]
 
 minusOne :: Poly
-minusOne = fromShiftCoeffs (-1) [1]
+minusOne = fromCoeffs [-1]
 
 minusOverN :: Poly
-minusOverN = fromShiftCoeffs (-2) [1]
+minusOverN = fromShiftCoeffs (-1) [-1]
 
 -- RULES --
 
@@ -65,6 +65,7 @@ loopRule (node, VS poly g)
   | Just g' <- loop node g
   = Just (poly, [VS plusN g'])
   | otherwise = Nothing
+
 
 -- GRAPH OPERATIONS --
 

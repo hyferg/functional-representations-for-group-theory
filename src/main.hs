@@ -18,54 +18,62 @@ main = return ()
 
 rep = putStr $ drawTree $ fmap show out
 
-foldNode :: (Poly, Int) -> [Poly] -> Poly
-foldNode (a, _) [b, c] = LP.mul a (LP.add b c)
-foldNode (a, _) [b] = LP.mul a b
-foldNode (a, _) [] = a
+foldNode :: (FlatGraph g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
+foldNode (a, _, Nothing) [b, c] = LP.mul a (LP.add b c)
+foldNode (a, _, Nothing) [b] = LP.mul a b
+foldNode (a, _, Nothing) [] = a
 
 --input = build pill
-input = build pill
+input = build fourCasimir
 --out = buildNode input
 out = unfoldTree buildNode input
+poly = foldTree foldNode out
 
 buildNode :: (FlatGraph g) =>
   VectorSpace Poly g ->
-  ((Poly, Int), [VectorSpace Poly g])
+  ((Poly, [Char], Maybe g), [VectorSpace Poly g])
 buildNode preNode
-  | Left  (poly', vs) <- stack = ((poly', 0), vs)
-  | Right (VS poly' g) <- stack = ((poly', 1), [])
+  | Left  ((poly', vs), id) <- stack = ((poly', id, Nothing), vs)
+  | Right (VS poly' g) <- stack = ((poly', "fail", Just $ g), [])
   where
     stack = return preNode >>= decompose
 
+-- TODO put this in a list format so different strats can easily be tried
 decompose :: (FlatGraph g) =>
   VectorSpace Poly g ->
-  Either (Poly, [VectorSpace Poly g])
+  Either ((Poly, [VectorSpace Poly g]), [Char])
                 (VectorSpace Poly g)
 decompose (VS poly g)
-  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
-  , out <- catMaybes $ map sunP1Rule input
-  , length out >= 1 = Left $ head out
 
   | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
   , out <- catMaybes $ map shrinkChainRule input
-  , length out >= 1 = Left $ head out
+  , length out >= 1 = Left $ ((head out), "chainx")
 
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map tadpoleRule input
+  , length out >= 1 = Left $ ((head out), "tadpole")
+
+  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
+  , out <- catMaybes $ map sunP1Rule input
+  , length out >= 1 = Left $ ((head out), "sunp1")
 
   | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
   , out <- catMaybes $ map loopRule input
-  , length out >= 1 = Left $ head out
+  , length out >= 1 = Left $ ((head out), "loop")
 
-  | otherwise = Right $ VS poly g
+
+  | isEmpty_ g = Left $ ((poly, []), "empty")
+
+  -- | otherwise = Right $ VS poly g
 
 {-
+
 
   | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
   , out <- catMaybes $ map gggRule input
   , length out >= 1 = Left $ head out
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
-  , out <- catMaybes $ map tadpoleRule input
-  , length out >= 1 = Left $ head out
+
 
 
 -}

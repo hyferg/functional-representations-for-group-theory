@@ -4,9 +4,9 @@ import Data.Maybe
 import FlatGraph
 type Eidx = Label
 type Nidx = Label
-data NodeP = NodeP [Eidx] deriving (Show)
-data EdgeP = EdgeP [Nidx] EdgeType deriving (Show)
-data Graph = Graph (Map Nidx NodeP) (Map Eidx EdgeP) deriving (Show)
+data NodeP = NodeP [Eidx] deriving (Show, Eq)
+data EdgeP = EdgeP [Nidx] EdgeType deriving (Show, Eq)
+data Graph = Graph (Map Nidx NodeP) (Map Eidx EdgeP) deriving (Show, Eq)
 
 emptyGraph :: Graph
 emptyGraph = Graph (Map.empty) (Map.empty)
@@ -22,6 +22,10 @@ instance FlatGraph Graph where
     safeSplit_         = safeSplit
     swapChain_         = swapChain
     work_              = work
+    isEmpty_           = isEmpty
+
+isEmpty :: Graph -> Bool
+isEmpty (Graph a b) = a == empty && b == empty
 
 freeEdgeIndices :: Int -> Graph -> [Eidx]
 freeEdgeIndices n (Graph _ me)
