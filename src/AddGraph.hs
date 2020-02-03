@@ -13,6 +13,90 @@ stockGraph g = let
   in return g >>= work_ []
 -}
 
+half6j :: (FlatGraph g) => g -> Maybe g
+half6j g = let
+  eL = 4  `freeEdgeLabelsOf_` g
+  nL = 4  `freeNodeLabelsOf_` g
+
+  eg  = Edge (eL !! 0)  [n0,n1] G
+  e01 = Edge (eL !! 1)  [n0,n1] D
+  e0i = Edge (eL !! 2)  [n0,ni] U
+  e1j = Edge (eL !! 3)  [n1,nj] D
+
+  n0 = Node (nL !! 0) [e0i,e01,eg]
+  n1 = Node (nL !! 1) [e1j,eg,e01]
+  ni = Node (nL !! 2) [e0i]
+  nj = Node (nL !! 3) [e1j]
+
+  in return g >>= work_ [
+  InsertE [
+      eg,
+      e01,
+      e0i,
+      e1j ],
+  InsertN [
+      n0,
+      n1,
+      ni,
+      nj ]
+  ]
+
+badSunP1 :: (FlatGraph g) => g -> Maybe g
+badSunP1 g = let
+  eI = 5 `freeEdgeLabelsOf_` g
+  nI = 6 `freeNodeLabelsOf_` g
+
+  e15 = Edge (eI !! 0) [n1, n5] D
+  e25 = Edge (eI !! 1) [n2, n5] U
+  e36 = Edge (eI !! 2) [n3, n6] D
+  e46 = Edge (eI !! 3) [n4, n6] U
+  e56 = Edge (eI !! 4) [n5, n6] G
+
+  n1 = Node (nI !! 0) [e15]
+  n2 = Node (nI !! 1) [e25]
+  n3 = Node (nI !! 2) [e36]
+  n4 = Node (nI !! 3) [e46]
+  n5 = Node (nI !! 4) [e15, e25, e56]
+  n6 = Node (nI !! 5) [e56, e46, e36]
+
+  in return g >>= work_ [
+  InsertE [e15, e25, e36, e46, e56],
+  InsertN [n1, n2, n3, n4, n5, n6] ]
+
+peace6j :: (FlatGraph g) => g -> Maybe g
+peace6j g = let
+  eL = 6  `freeEdgeLabelsOf_` g
+  nL = 4  `freeNodeLabelsOf_` g
+
+  e13 = Edge (eL !! 0)  [n1,n3] D
+  e32 = Edge (eL !! 1)  [n3,n2] D
+  e21 = Edge (eL !! 2)  [n2,n1] D
+  e01 = Edge (eL !! 3)  [n0,n1] G
+  e03 = Edge (eL !! 4)  [n0,n3] G
+  e02 = Edge (eL !! 5)  [n0,n2] G
+
+  n0 = Node (nL !! 0) [e01,e03,e02]
+  n1 = Node (nL !! 1) [e13,e01,e21]
+  n3 = Node (nL !! 3) [e32,e03,e13]
+  n2 = Node (nL !! 2) [e21,e02,e32]
+
+  in return g >>= work_ [
+  InsertN [
+      n0,
+      n1,
+      n2,
+      n3 ],
+  InsertE [
+      e13,
+      e32,
+      e21,
+      e01,
+      e03,
+      e02 ]
+  ]
+
+
+
 dumbell :: (FlatGraph g) => g -> Maybe g
 dumbell g = let
   eL = 3  `freeEdgeLabelsOf_` g
@@ -165,8 +249,8 @@ pill g = let
   eg  = Edge (eL !! 1) [ni, nj] G
   eji = Edge (eL !! 2) [nj, ni] D
 
-  ni = Node (nL !! 0) [eij, eg, eji]
-  nj = Node (nL !! 1) [eji, eg, eij]
+  ni = Node (nL !! 0) [eji, eg, eij]
+  nj = Node (nL !! 1) [eij, eg, eji]
 
   in return g >>= work_ [
   InsertN [ni, nj], InsertE [eij, eg, eji] ]

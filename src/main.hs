@@ -24,7 +24,7 @@ foldNode (a, _, Nothing) [b] = LP.mul a b
 foldNode (a, _, Nothing) [] = a
 
 --input = build pill
-input = build fourCasimir
+input = build pill
 --out = buildNode input
 out = unfoldTree buildNode input
 poly = foldTree foldNode out
@@ -61,10 +61,13 @@ decompose (VS poly g)
   , out <- catMaybes $ map loopRule input
   , length out >= 1 = Left $ ((head out), "loop")
 
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map gggRule input
+  , length out >= 1 = Left $ ((head out), "ggg")
 
   | isEmpty_ g = Left $ ((poly, []), "empty")
 
-  -- | otherwise = Right $ VS poly g
+  | otherwise = Right $ VS poly g
 
 {-
 

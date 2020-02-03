@@ -23,6 +23,10 @@ instance FlatGraph Graph where
     swapChain_         = swapChain
     work_              = work
     isEmpty_           = isEmpty
+    show_ = show'
+
+show' :: Graph -> String
+show' g = show g
 
 isEmpty :: Graph -> Bool
 isEmpty (Graph a b) = a == empty && b == empty

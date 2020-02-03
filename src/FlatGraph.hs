@@ -22,6 +22,7 @@ class FlatGraph g where
   swapChain_ :: (Node, Edge, Node, Edge, Node) -> Edge -> g -> Maybe g
   work_ :: [Operation] -> g -> Maybe g
   isEmpty_ :: g -> Bool
+  show_ :: g -> String
 
 -- UTILS --
 
@@ -31,9 +32,22 @@ orientedDirectedTypes node = eTypes
     (Node _ edges) = oriented node
     eTypes = filter (\e -> e/=G) $ edgeTypes edges
 
+
+
+chiralEq :: Node -> Node -> Bool
+chiralEq n1 n2
+  | (Node _ n1Edges) <- oriented n1
+  , (Node _ n2Edges) <- oriented n2
+  , len <- length n1Edges
+  = (edgeTypes n1Edges) `elem` [ take len $ drop i $ cycle (edgeTypes n2Edges) |
+                             i <- [1..len] ]
+
+
+{-
 chiralEq :: Node -> Node -> Bool
 chiralEq n1 n2 = isClock n1 && isClock n2 ||
   isAntiClock n1 && isAntiClock n2
+-}
 
 isAntiClock :: Node -> Bool
 isAntiClock node

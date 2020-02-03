@@ -1,5 +1,6 @@
 module Decompositions where
 import FlatGraph
+import Debug.Trace
 
 import MathObj.LaurentPolynomial as LP
 type Poly = LP.T Int
@@ -114,16 +115,31 @@ shrinkChain nj g
       return g >>= swapChain_ (ni, eji, nj, ejk, nk) eik
   | otherwise = Nothing
 
+--vectMatch :: EdgeType -> [Node] -> [Node]
+vectMatch targetType nodes = trace (show nodes) (vectMatch' targetType nodes)
+vectMatch' targetType nodes
+  | length fNodes == 1 = fNodes
+  | otherwise = [head fNodes]
+  where
+    teq (Node _ [Edge _ _ eType]) = eType == targetType
+    fNodes = [n | n <- nodes, teq $ n]
+
+
 sunP1LHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1LHS emn g
   | (Edge _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = do
       g' <- return g >>= work_ [RemoveE [emn]]
-      ([nmBot, nmTop], g'')  <- safeSplit_ nm g'
-      ([nnTop, nnBot], g''') <- safeSplit_ nn g''
-      return g''' >>= work_ [Merge [(nmTop, nnTop), (nmBot, nnBot)]]
-  | otherwise = Nothing
+      (nms, g'')  <- safeSplit_ nm g'
+      (nns, g''') <- safeSplit_ nn g''
+      (_,_) <- trace (show_ g''') safeSplit_ nn g''
+      [nnU] <- Just $ vectMatch U nns
+      [nnD] <- Just $ vectMatch D nns
+      [nmU] <- Just $ vectMatch U nms
+      [nmD] <- Just $ vectMatch D nms
+      return g''' >>= work_ [Merge [(nnU, nmD), (nnD, nmU)]]
+  -- | otherwise = Nothing
 
 sunP1RHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1RHS emn g
