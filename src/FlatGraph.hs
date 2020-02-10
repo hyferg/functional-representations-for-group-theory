@@ -42,6 +42,14 @@ chiralEq n1 n2
   = (edgeTypes n1Edges) `elem` [ take len $ drop i $ cycle (edgeTypes n2Edges) |
                              i <- [1..len] ]
 
+antiChiralEq :: Node -> Node -> Bool
+antiChiralEq n1 n2
+  | (Node _ n1Edges) <- oriented n1
+  , (Node _ n2Edges) <- oriented n2
+  , len <- length n1Edges
+  = (reverse $ edgeTypes n1Edges) `elem` [
+      take len $ drop i $ cycle (edgeTypes n2Edges) | i <- [1..len] ]
+
 
 {-
 chiralEq :: Node -> Node -> Bool
@@ -71,7 +79,9 @@ invert (Edge label [n1, n2] eType) = Edge label [n2, n1] (rotate eType)
 orientEdge :: Node -> Edge -> Edge
 orientEdge n0 edge
   | (Edge _ [n1, _] _) <- edge
-  = if n0==n1 then edge else invert edge
+  , n0==n1 = edge
+  | (Edge _ [n1, n2] _) <- edge
+  , n0==n2 || n0/=n1 = invert edge
 
 oriented :: Node -> Node
 oriented node
@@ -129,14 +139,14 @@ instance EqEdge Edge where
 -- note that the nodes are oriented
 instance Show Node where
   show node =
-    (id "\nNode ") ++ show nL ++ id " "
-    ++ show [ (eType, eL) | (Edge eL _ eType) <- edges ] ++ id " "
+    (id "Node ") ++ show nL ++ id " "
+    ++ show [ e | e <- edges ] ++ id "\n"
     where
       (Node nL edges) = oriented node
 
 instance Show Edge where
   show (Edge eL nodes eType) =
-    (id "\nEdge ") ++ show eL ++ id " "
+    (id "Edge ") ++ show eL ++ id " "
     ++ show [ nL | (Node nL _) <- nodes ] ++ id " "
     ++ show eType
-    ++ " "
+    ++ ""

@@ -10,11 +10,22 @@ stockGraph g = let
   e = Edge (eL !! _)  [] _
   n = Node (nL !! _) []
 
-  in return g >>= work_ []
+  in return g >>= work_ [InsertE [], InsertN]
 -}
 
-half6j :: (FlatGraph g) => g -> Maybe g
-half6j g = let
+vector :: (FlatGraph g) => g -> Maybe g
+vector g = let
+  eL = 1  `freeEdgeLabelsOf_` g
+  nL = 2  `freeNodeLabelsOf_` g
+
+  e =  Edge (eL !! 0) [n0,n1] U
+  n0 = Node (nL !! 0) [e]
+  n1 = Node (nL !! 1) [e]
+
+  in return g >>= work_ [InsertE [e], InsertN [n0, n1]]
+
+half6jLL :: (FlatGraph g) => g -> Maybe g
+half6jLL g = let
   eL = 4  `freeEdgeLabelsOf_` g
   nL = 4  `freeNodeLabelsOf_` g
 
@@ -41,8 +52,37 @@ half6j g = let
       nj ]
   ]
 
-badSunP1 :: (FlatGraph g) => g -> Maybe g
-badSunP1 g = let
+
+half6jLR :: (FlatGraph g) => g -> Maybe g
+half6jLR g = let
+  eL = 4  `freeEdgeLabelsOf_` g
+  nL = 4  `freeNodeLabelsOf_` g
+
+  eg  = Edge (eL !! 0)  [n0,n1] G
+  e01 = Edge (eL !! 1)  [n0,n1] D
+  e0i = Edge (eL !! 2)  [n0,ni] U
+  e1j = Edge (eL !! 3)  [n1,nj] D
+
+  n0 = Node (nL !! 0) [e0i,e01,eg]
+  n1 = Node (nL !! 1) [eg,e01,e1j]
+  ni = Node (nL !! 2) [e0i]
+  nj = Node (nL !! 3) [e1j]
+
+  in return g >>= work_ [
+  InsertE [
+      eg,
+      e01,
+      e0i,
+      e1j ],
+  InsertN [
+      n0,
+      n1,
+      ni,
+      nj ]
+  ]
+
+flippedSunP1 :: (FlatGraph g) => g -> Maybe g
+flippedSunP1 g = let
   eI = 5 `freeEdgeLabelsOf_` g
   nI = 6 `freeNodeLabelsOf_` g
 
@@ -245,12 +285,12 @@ pill g = let
   eL = 3 `freeEdgeLabelsOf_` g
   nL = 2 `freeNodeLabelsOf_` g
 
-  eij = Edge (eL !! 0) [ni, nj] D
-  eg  = Edge (eL !! 1) [ni, nj] G
-  eji = Edge (eL !! 2) [nj, ni] D
+  eij = Edge (eL !! 0) [ni,nj] D
+  eg  = Edge (eL !! 1) [ni,nj] G
+  eji = Edge (eL !! 2) [nj,ni] D
 
-  ni = Node (nL !! 0) [eji, eg, eij]
-  nj = Node (nL !! 1) [eij, eg, eji]
+  ni = Node (nL !! 0) [eg,eij,eji]
+  nj = Node (nL !! 1) [eij,eg,eji]
 
   in return g >>= work_ [
   InsertN [ni, nj], InsertE [eij, eg, eji] ]
@@ -263,7 +303,7 @@ tripleGluon g = let
   eL = 3 `freeEdgeLabelsOf_` g
   nL = 4 `freeNodeLabelsOf_` g
 
-  nc = Node (nL !! 3) [eci, ecj, eck]
+  nc = Node (nL !! 3) [eci,ecj,eck]
   ni = Node (nL !! 0) [eci]
   nj = Node (nL !! 1) [ecj]
   nk = Node (nL !! 2) [eck]

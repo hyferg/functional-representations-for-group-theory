@@ -101,7 +101,7 @@ merge (nj, nk) g
   , Node nkIDX [ekl] <- nk
   , (Edge ejiIDX [_, ni] ejiType) <- orientEdge nj eij
   , (Edge eklIDX [_, nl] eklType) <- orientEdge nk ekl
-  --, (Graph mn me) <- g
+  , ejiType == rotate eklType
   = do
       nidx' <- Just $ head $ 1 `freeNodeLabelsOf_` g
       n' <- Just $ Node nidx' [eij, ekl]
@@ -142,7 +142,8 @@ pull (edge, node) (nodes, g)
       filterOutEidxFromNidx eidx nidx  >>=
       maybeInsertNode (Node nidx' [edge]) >>=
       swapNidxInEidx nidx nidx' eidx
-    return (nodes ++ [(Node nidx' [edge])], g')
+    n' <- getNode_ nidx' g'
+    return (nodes ++ [n'], g')
   | otherwise = Nothing
 
 handleOperation :: Operation -> Graph -> Maybe Graph
@@ -164,12 +165,12 @@ getEdgeIDXsIn (Node _ edges) = getEdgeIDXs edges
 swaps :: [(Node, Node)] -> Graph -> Maybe Graph
 swaps nns graph = maybeRecursion nns (swap) graph
 
--- TODO ???
+-- TODO verify label equality
 swap :: (Node, Node) -> Graph -> Maybe Graph
 swap (target, replacement) graph
   | (Node ntIDX e0) <- target
   , (Node nrIDX e1) <- replacement
-  , length e0 < length e1
+-- , length e0 == length e1
   , ntIDX == nrIDX = Just $ insertNode replacement graph
   | otherwise = Nothing
 

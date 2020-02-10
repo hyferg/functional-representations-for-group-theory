@@ -24,7 +24,7 @@ foldNode (a, _, Nothing) [b] = LP.mul a b
 foldNode (a, _, Nothing) [] = a
 
 --input = build pill
-input = build pill
+input = build peace6j
 --out = buildNode input
 out = unfoldTree buildNode input
 poly = foldTree foldNode out
@@ -45,13 +45,6 @@ decompose :: (FlatGraph g) =>
                 (VectorSpace Poly g)
 decompose (VS poly g)
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
-  , out <- catMaybes $ map shrinkChainRule input
-  , length out >= 1 = Left $ ((head out), "chainx")
-
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
-  , out <- catMaybes $ map tadpoleRule input
-  , length out >= 1 = Left $ ((head out), "tadpole")
 
   | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
   , out <- catMaybes $ map sunP1Rule input
@@ -62,8 +55,20 @@ decompose (VS poly g)
   , length out >= 1 = Left $ ((head out), "loop")
 
   | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map shrinkChainRule input
+  , length out >= 1 = Left $ ((head out), "chainx")
+
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  , out <- catMaybes $ map tadpoleRule input
+  , length out >= 1 = Left $ ((head out), "tadpole")
+
+  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
   , out <- catMaybes $ map gggRule input
   , length out >= 1 = Left $ ((head out), "ggg")
+
+  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
+  , out <- catMaybes $ map twistRule input
+  , length out >= 1 = Left $ ((head out), "twist")
 
   | isEmpty_ g = Left $ ((poly, []), "empty")
 

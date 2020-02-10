@@ -23,6 +23,14 @@ minusOverN = fromShiftCoeffs (-1) [-1]
 
 -- RULES --
 
+twistRule :: (FlatGraph g) =>
+  (Edge, VectorSpace Poly g) ->
+  Maybe (Poly, [VectorSpace Poly g])
+twistRule (emn, (VS poly g))
+  | Just g' <- twist emn g
+  = Just (poly, [VS minusOne g'])
+  | otherwise = Nothing
+
 -- TODO add shrinkchain to the merged nodes
 sunP1Rule :: (FlatGraph g) =>
   (Edge, VectorSpace Poly g) ->
@@ -116,13 +124,13 @@ shrinkChain nj g
   | otherwise = Nothing
 
 --vectMatch :: EdgeType -> [Node] -> [Node]
-vectMatch targetType nodes = trace (show nodes) (vectMatch' targetType nodes)
-vectMatch' targetType nodes
-  | length fNodes == 1 = fNodes
-  | otherwise = [head fNodes]
+--vectMatch targetType nodes = trace (show nodes) (vectMatch' targetType $ map oriented nodes)
+vectMatch targetType nodes
+  | length fNodes == 1 = Just $ head fNodes
+-- | otherwise = Nothing
   where
     teq (Node _ [Edge _ _ eType]) = eType == targetType
-    fNodes = [n | n <- nodes, teq $ n]
+    fNodes = [n | n <- nodes, teq $ oriented n]
 
 
 sunP1LHS :: (FlatGraph g) => Edge -> g -> Maybe g
@@ -133,13 +141,22 @@ sunP1LHS emn g
       g' <- return g >>= work_ [RemoveE [emn]]
       (nms, g'')  <- safeSplit_ nm g'
       (nns, g''') <- safeSplit_ nn g''
-      (_,_) <- trace (show_ g''') safeSplit_ nn g''
-      [nnU] <- Just $ vectMatch U nns
-      [nnD] <- Just $ vectMatch D nns
-      [nmU] <- Just $ vectMatch U nms
-      [nmD] <- Just $ vectMatch D nms
+      (_,_) <- trace (show nms) safeSplit_ nn g''
+      nnU <- vectMatch U nns
+      nnD <- vectMatch D nns
+      nmU <- vectMatch U nms
+      nmD <- vectMatch D nms
       return g''' >>= work_ [Merge [(nnU, nmD), (nnD, nmU)]]
-  -- | otherwise = Nothing
+  | otherwise = Nothing
+
+-- exchange generator indices
+twist :: (FlatGraph g) => Edge -> g -> Maybe g
+twist emn g
+  | (Edge _ [nm, nn] G) <- emn
+  , antiChiralEq nm nn
+  , (Node nL edges) <- nm
+  = do return g >>= work_[Swap [(nm, (Node nL (Prelude.reverse edges)))]]
+  | otherwise = Nothing
 
 sunP1RHS :: (FlatGraph g) => Edge -> g -> Maybe g
 sunP1RHS emn g
@@ -149,14 +166,16 @@ sunP1RHS emn g
   | otherwise = Nothing
 
 gluonExpansionGraph :: (FlatGraph g) => String -> Node -> g -> Maybe g
-gluonExpansionGraph rotation nc g
+
+gluonExpansionGraph rotation nc g = trace (show nc) gluonExpansionGraph' rotation nc g
+gluonExpansionGraph' rotation nc g
   | (Node _ [eic, ejc, ekc]) <- nc
   , (Edge _ _ G) <- eic
   , (Edge _ _ G) <- ejc
   , (Edge _ _ G) <- ekc
   , rotation == "clock" || rotation == "anticlock"
   = do
-      ([n1, n2, n3], g') <- split_ nc g
+      ([n1, n2, n3], g') <- safeSplit_ nc g
       (Node n1L [e1i]) <- Just n1
       (Node n2L [e2j]) <- Just n2
       (Node n3L [e3k]) <- Just n3
