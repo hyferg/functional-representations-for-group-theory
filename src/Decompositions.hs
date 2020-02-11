@@ -141,7 +141,7 @@ sunP1LHS emn g
       g' <- return g >>= work_ [RemoveE [emn]]
       (nms, g'')  <- safeSplit_ nm g'
       (nns, g''') <- safeSplit_ nn g''
-      (_,_) <- trace (show nms) safeSplit_ nn g''
+      --(_,_) <- trace (show nms) safeSplit_ nn g''
       nnU <- vectMatch U nns
       nnD <- vectMatch D nns
       nmU <- vectMatch U nms
@@ -167,8 +167,8 @@ sunP1RHS emn g
 
 gluonExpansionGraph :: (FlatGraph g) => String -> Node -> g -> Maybe g
 
-gluonExpansionGraph rotation nc g = trace (show nc) gluonExpansionGraph' rotation nc g
-gluonExpansionGraph' rotation nc g
+--gluonExpansionGraph rotation nc g = trace (show nc) gluonExpansionGraph' rotation nc g
+gluonExpansionGraph rotation nc g
   | (Node _ [eic, ejc, ekc]) <- nc
   , (Edge _ _ G) <- eic
   , (Edge _ _ G) <- ejc
