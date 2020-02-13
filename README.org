@@ -1,36 +1,66 @@
-* SRC Files
-  
-** FlatGraph.hs
-   
-   Provides the FlatGraph typeclass which requires operations involving labelled recursive Node and Edge types be instantiated
-   
-** Graph.hs
-   
-   Instance of the FlatGraph typeclass which is a pointer simulation.
-    
-   - Graph (Map Int Node) (Map Int Edge)
-   - NodeP [Int]
-   - EdgeP [Int] EdgeType
-    
-   From any index entrypoint into the graph ledger, recursive data types are constructed.
-   
-   - Node [Edge]
-   - Edge [Node] EdgeType
-   
-     All operations on the graph ledger is expressed in terms of these recursive types.
-   
-** Decomposition.hs
-   
-   SunP1, remove gluon chain, kill tadpole, etc.
-   This higher order operations are constructed using the FlatGraph `interface`
-
-* Tests
-  
-  - [ ] insertEdges
-  - [ ] removeEdges
-  - [ ] insertNodes
-  - [ ] removeNodes
-  - [ ] sunP1
-  - [ ] gluonExpansion
-  - [ ] tadPole
-  - [ ] killChain
+* Modules
+** GraphRecursive
+*** Types
+**** EdgeType                                                          :data:
+**** Label                                                             :type:
+**** Node                                                              :data:
+**** Edge                                                              :data:
+**** Operation                                                         :data:
+**** GraphRecursive                                                   :class:
+***** getNode
+***** getEdge
+***** freeEdgeLabelsOf
+***** freeNodeLabelsOf
+***** allNodes
+***** allEdges
+***** safeSplit
+***** work
+***** swapChain
+***** isEmpty
+**** LabelEquatable                                                   :class:
+***** (=@), (/=@)
+**** ColorEquatable                                                   :class:
+***** (=~), (/=~)
+**** Invertable                                                       :class:
+***** invert
+*** Function
+**** oriented
+**** orientEdge
+**** edgeType
+**** chiralEq
+**** antiChiralEq
+**** otherNode
+**** rotate
+**** is
+** GraphData                                                 :GraphRecursive:
+*** Types
+**** GraphData                                                         :data:
+*** Functions
+**** emptyGraph
+** Graphs                                                    :GraphRecursive:
+*** Function
+**** peace6j
+**** pill
+**** oneCasimir
+**** twoCasimir
+**** threeCasimir
+**** fourCasimir
+** Rules                                                     :GraphRecursive:
+*** Type
+**** GraphRecursive                                                   :class:
+**** Poly                                                              :type:
+**** VectorSpace                                                       :data:
+*** Function
+**** twistRule
+**** gggRule
+**** tadpoleRule
+**** shrinkChainRule
+**** loopRule
+**** sunP1Rule
+** Algo                                                               :Rules:
+*** Function
+**** build
+**** buildNode
+**** foldNode
+** main                                               :GraphData:Algo:Graphs:
+_

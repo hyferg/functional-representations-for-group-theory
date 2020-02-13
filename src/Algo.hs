@@ -1,4 +1,4 @@
-module Algo where
+module Algo (build, buildNode, foldNode) where
 import Rules
 import GraphData
 import MathObj.LaurentPolynomial as LP
@@ -32,36 +32,36 @@ decompose :: (GraphRecursive g) =>
   Either ((Poly, [VectorSpace Poly g]), [Char])
                 (VectorSpace Poly g)
 decompose (VS poly g)
-  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
+  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges g ]
   , out <- catMaybes $ map sunP1Rule input
   , length out >= 1 = Left $ ((head out), "sunp1")
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  | input <- [ (node, (VS poly g)) | node <- allNodes g ]
   , out <- catMaybes $ map loopRule input
   , length out >= 1 = Left $ ((head out), "loop")
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  | input <- [ (node, (VS poly g)) | node <- allNodes g ]
   , out <- catMaybes $ map shrinkChainRule input
   , length out >= 1 = Left $ ((head out), "chainx")
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  | input <- [ (node, (VS poly g)) | node <- allNodes g ]
   , out <- catMaybes $ map tadpoleRule input
   , length out >= 1 = Left $ ((head out), "tadpole")
 
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  | input <- [ (node, (VS poly g)) | node <- allNodes g ]
   , out <- catMaybes $ map gggRule input
   , length out >= 1 = Left $ ((head out), "ggg")
 
-  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges_ g ]
+  | input <- [ (edge, (VS poly g)) | edge <- gluonEdges $ allEdges g ]
   , out <- catMaybes $ map twistRule input
   , length out >= 1 = Left $ ((head out), "twist")
 
-  | isEmpty_ g = Left $ ((poly, []), "empty")
+  | isEmpty g = Left $ ((poly, []), "empty")
 
   | otherwise = Right $ VS poly g
 
 {-
-  | input <- [ (node, (VS poly g)) | node <- allNodes_ g ]
+  | input <- [ (node, (VS poly g)) | node <- allNodes g ]
   , out <- catMaybes $ map gggRule input
   , length out >= 1 = Left $ head out
 -}

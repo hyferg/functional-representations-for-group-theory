@@ -76,7 +76,7 @@ loop node g
   | (Node _ [e1, e2]) <- node
   , e1 =@ e2
   , e1 `is` U || e1 `is` D
-  = return g >>= work_ [DeleteN [node], DeleteE [e1, e2]]
+  = return g >>= work [DeleteN [node], DeleteE [e1, e2]]
   | otherwise = Nothing
 
 isTadpole :: Edge -> Edge -> Edge -> Bool
@@ -106,13 +106,13 @@ shrinkChain nj g
   , eji <- orientEdge nj eij'
   , ejk <- orientEdge nj ejk'
   , eji /=@ ejk
-  , invert eji =~ ejk
+  , rotate eji =~ ejk
   = do
       ni <- otherNode eji nj
       nk <- otherNode ejk nj
-      eikLabel <- return $ head $ 1 `freeEdgeLabelsOf_` g
+      eikLabel <- return $ head $ 1 `freeEdgeLabelsOf` g
       eik  <- return $ Edge eikLabel [ni, nk] (edgeType ejk)
-      return g >>= swapChain_ (ni, eji, nj, ejk, nk) eik
+      return g >>= swapChain (ni, eji, nj, ejk, nk) eik
   | otherwise = Nothing
 
 --vectMatch :: EdgeType -> [Node] -> [Node]
@@ -130,15 +130,15 @@ sunP1LHS emn g
   | (Edge _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = do
-      g' <- return g >>= work_ [RemoveE [emn]]
-      (nms, g'')  <- safeSplit_ nm g'
-      (nns, g''') <- safeSplit_ nn g''
+      g' <- return g >>= work [RemoveE [emn]]
+      (nms, g'')  <- safeSplit nm g'
+      (nns, g''') <- safeSplit nn g''
       --(_,_) <- trace (show nms) safeSplit_ nn g''
       nnU <- vectMatch U nns
       nnD <- vectMatch D nns
       nmU <- vectMatch U nms
       nmD <- vectMatch D nms
-      return g''' >>= work_ [Merge [(nnU, nmD), (nnD, nmU)]]
+      return g''' >>= work [Merge [(nnU, nmD), (nnD, nmU)]]
   | otherwise = Nothing
 
 -- exchange generator indices
@@ -147,14 +147,14 @@ twist emn g
   | (Edge _ [nm, nn] G) <- emn
   , antiChiralEq nm nn
   , (Node nL edges) <- nm
-  = do return g >>= work_[Swap [(nm, (Node nL (Prelude.reverse edges)))]]
+  = do return g >>= work[Swap [(nm, (Node nL (Prelude.reverse edges)))]]
   | otherwise = Nothing
 
 sunP1RHS :: (GraphRecursive g) => Edge -> g -> Maybe g
 sunP1RHS emn g
   | (Edge _ [nm, nn] G) <- emn
   , chiralEq nm nn
-  = return g >>= work_ [RemoveE [emn]]
+  = return g >>= work [RemoveE [emn]]
   | otherwise = Nothing
 
 gluonExpansionGraph :: (GraphRecursive g) => String -> Node -> g -> Maybe g
@@ -167,12 +167,12 @@ gluonExpansionGraph rotation nc g
   , (Edge _ _ G) <- ekc
   , rotation == "clock" || rotation == "anticlock"
   = do
-      ([n1, n2, n3], g') <- safeSplit_ nc g
+      ([n1, n2, n3], g') <- safeSplit nc g
       (Node n1L [e1i]) <- Just n1
       (Node n2L [e2j]) <- Just n2
       (Node n3L [e3k]) <- Just n3
       let
-        eL = 3 `freeEdgeLabelsOf_` g
+        eL = 3 `freeEdgeLabelsOf` g
         eType = if rotation == "anticlock" then D else U
 
         e12 = Edge (eL !! 0) [n1, n2] eType
@@ -183,7 +183,7 @@ gluonExpansionGraph rotation nc g
         n2' = Node n2L [e12, e2j, e23]
         n3' = Node n3L [e31, e23, e3k]
 
-        in return g' >>= work_ [
+        in return g' >>= work [
         InsertE [e12, e23, e31],
         Swap [(n1, n1'),(n2, n2'),(n3, n3') ]]
   | otherwise = Nothing

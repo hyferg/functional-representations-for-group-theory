@@ -3,8 +3,8 @@ module GraphRecursive (
   EdgeType(..), Label, Node(..), Edge(..),
   Operation(..),
   orientEdge, edgeType, chiralEq, antiChiralEq,
-  oriented, otherNode, invert, is,
-  LabelEquatable(..), ColorEquatable(..), Rotatable(..) ) where
+  oriented, otherNode, rotate, is,
+  LabelEquatable(..), ColorEquatable(..), Invertable(..) ) where
 
 data EdgeType = U | D | G deriving (Show, Eq)
 type Label = Int
@@ -16,19 +16,17 @@ data Operation = InsertE [Edge] | InsertN [Node] |
                  Merge [(Node, Node)] | DeleteE [Edge] | DeleteN [Node]
 
 class GraphRecursive g where
-  getNode_ :: Label -> g -> Maybe Node
-  getEdge_ :: Label -> g -> Maybe Edge
+  getNode :: Label -> g -> Maybe Node
+  getEdge :: Label -> g -> Maybe Edge
   -- TODO no need for this to take an Int, just return an infinite list
-  freeEdgeLabelsOf_ :: Int -> g -> [Label]
-  freeNodeLabelsOf_ :: Int -> g -> [Label]
-  allNodes_ :: g -> [Node]
-  allEdges_ :: g -> [Edge]
-  split_ :: Node -> g -> Maybe ([Node], g)
-  safeSplit_ :: Node -> g -> Maybe ([Node], g)
-  swapChain_ :: (Node, Edge, Node, Edge, Node) -> Edge -> g -> Maybe g
-  work_ :: [Operation] -> g -> Maybe g
-  isEmpty_ :: g -> Bool
-  show_ :: g -> String
+  freeEdgeLabelsOf :: Int -> g -> [Label]
+  freeNodeLabelsOf :: Int -> g -> [Label]
+  allNodes :: g -> [Node]
+  allEdges :: g -> [Edge]
+  safeSplit :: Node -> g -> Maybe ([Node], g)
+  work :: [Operation] -> g -> Maybe g
+  swapChain :: (Node, Edge, Node, Edge, Node) -> Edge -> g -> Maybe g
+  isEmpty :: g -> Bool
 
 -- EXPORTS
 
@@ -37,7 +35,7 @@ orientEdge n0 edge
   | (Edge _ [n1, _] _) <- edge
   , n0 =@ n1 = edge
   | (Edge _ [n1, n2] _) <- edge
-  , n0 =@ n2 || n0 /=@ n1 = invert edge
+  , n0 =@ n2 || n0 /=@ n1 = rotate edge
 
 oriented :: Node -> Node
 oriented node
@@ -71,8 +69,8 @@ otherNode edge n
     = Just $ head [ ni | ni <- [n1, n2], ni /=@ n ]
   | otherwise = Nothing
 
-invert :: Edge -> Edge
-invert (Edge label [n1, n2] eType) = Edge label [n2, n1] (rotate eType)
+rotate :: Edge -> Edge
+rotate (Edge label [n1, n2] eType) = Edge label [n2, n1] (invert eType)
 
 is :: Edge -> EdgeType -> Bool
 is (Edge _ _ a) b = a == b
@@ -85,13 +83,13 @@ edgeTypes edges = [ eType | Edge _ _ eType <- edges ]
 
 -- TYPE PROPERTIES --
 
-class Rotatable e where
-  rotate :: e -> e
+class Invertable e where
+  invert :: e -> e
 
-instance Rotatable EdgeType where
-  rotate U = D
-  rotate D = U
-  rotate G = G
+instance Invertable EdgeType where
+  invert U = D
+  invert D = U
+  invert G = G
 
 class LabelEquatable o where
   (=@), (/=@) :: o -> o -> Bool

@@ -1,4 +1,5 @@
-module GraphData where
+module GraphData (
+  GraphData (..), emptyGraph ) where
 import Data.Map.Strict as Map hiding (take, filter)
 import Data.Maybe
 import GraphRecursive
@@ -12,65 +13,60 @@ emptyGraph :: GraphData
 emptyGraph = GraphData (Map.empty) (Map.empty)
 
 instance GraphRecursive GraphData where
-    freeEdgeLabelsOf_  = freeEdgeIndices
-    freeNodeLabelsOf_  = freeNodeIndices
-    getNode_           = getNode
-    getEdge_           = getEdge
-    allNodes_          = allNodes
-    allEdges_          = allEdges
-    split_             = GraphData.split
-    safeSplit_         = safeSplit
-    swapChain_         = swapChain
-    work_              = work
-    isEmpty_           = isEmpty
-    show_ = show'
+    freeEdgeLabelsOf  = freeEdgeIndices'
+    freeNodeLabelsOf  = freeNodeIndices'
+    getNode           = getNode'
+    getEdge           = getEdge'
+    allNodes          = allNodes'
+    allEdges          = allEdges'
+    safeSplit         = safeSplit'
+    work              = work'
+    isEmpty           = isEmpty'
+    swapChain         = swapChain'
 
-show' :: GraphData -> String
-show' g = show g
+isEmpty' :: GraphData -> Bool
+isEmpty' (GraphData a b) = a == empty && b == empty
 
-isEmpty :: GraphData -> Bool
-isEmpty (GraphData a b) = a == empty && b == empty
-
-freeEdgeIndices :: Int -> GraphData -> [Eidx]
-freeEdgeIndices n (GraphData _ me)
+freeEdgeIndices' :: Int -> GraphData -> [Eidx]
+freeEdgeIndices' n (GraphData _ me)
   | size me == 0 = take n [0..]
   | otherwise = take n [(k+1)..]
   where
     (k, _) = Map.findMax me
 
-freeNodeIndices :: Int -> GraphData -> [Eidx]
-freeNodeIndices n (GraphData mn _)
+freeNodeIndices' :: Int -> GraphData -> [Eidx]
+freeNodeIndices' n (GraphData mn _)
   | size mn == 0 = take n [0..]
   | otherwise = take n [(k+1)..]
   where
     (k, _) = Map.findMax mn
 
-getNode :: Nidx -> GraphData -> Maybe Node
-getNode nIDX (GraphData mn me) = do
+getNode' :: Nidx -> GraphData -> Maybe Node
+getNode' nIDX (GraphData mn me) = do
   (NodeP eIDXs) <- Map.lookup nIDX mn
   return $ Node nIDX (catMaybes [ getEdge e (GraphData mn me) | e <- eIDXs ])
 
-getEdge :: Eidx -> GraphData -> Maybe Edge
-getEdge eIDX (GraphData mn me) = do
+getEdge' :: Eidx -> GraphData -> Maybe Edge
+getEdge' eIDX (GraphData mn me) = do
   (EdgeP nIDXs eType) <- Map.lookup eIDX me
   return $ Edge eIDX (catMaybes [ getNode n (GraphData mn me) | n <- nIDXs]) eType
 
-allNodes :: GraphData -> [Node]
-allNodes (GraphData mapNode mapEdge) = catMaybes [
+allNodes' :: GraphData -> [Node]
+allNodes' (GraphData mapNode mapEdge) = catMaybes [
   getNode nIDX graph | nIDX <- keys mapNode ]
   where
     graph = (GraphData mapNode mapEdge)
 
-allEdges :: GraphData -> [Edge]
-allEdges (GraphData mapNode mapEdge) = catMaybes [
+allEdges' :: GraphData -> [Edge]
+allEdges' (GraphData mapNode mapEdge) = catMaybes [
   getEdge eIDX graph | eIDX <- keys mapEdge ]
   where
     graph = (GraphData mapNode mapEdge)
 
 
 -- from a stale node and graph, gets synced node and does the split
-safeSplit :: Node -> GraphData -> Maybe ([Node], GraphData)
-safeSplit staleNode g
+safeSplit' :: Node -> GraphData -> Maybe ([Node], GraphData)
+safeSplit' staleNode g
   | (Node nIDX _) <- staleNode
   = do
       freshNode <- getNode nIDX g
@@ -84,8 +80,8 @@ split node g
   = pulls [ (e, node) | e <- edges ] ([], g)
   | otherwise = Nothing
 
-work :: [Operation] -> GraphData -> Maybe GraphData
-work ops g = maybeRecursion ops (handleOperation) g
+work' :: [Operation] -> GraphData -> Maybe GraphData
+work' ops g = maybeRecursion ops (handleOperation) g
 
 -- UTILS --
 
@@ -101,9 +97,9 @@ merge (nj, nk) g
   , Node nkIDX [ekl] <- nk
   , (Edge ejiIDX [_, ni] ejiType) <- orientEdge nj eij
   , (Edge eklIDX [_, nl] eklType) <- orientEdge nk ekl
-  , ejiType == rotate eklType
+  , ejiType == invert eklType
   = do
-      nidx' <- Just $ head $ 1 `freeNodeLabelsOf_` g
+      nidx' <- Just $ head $ 1 `freeNodeIndices'` g
       n' <- Just $ Node nidx' [eij, ekl]
       --eji' = Edge ejiIDX [n', nk] ejiType
       --ekl' = Edge eklIDX [n', nj] eklType
@@ -137,12 +133,12 @@ pull (edge, node) (nodes, g)
   | (Edge eidx _ _) <- edge
   , (Node nidx _) <- node
   = do
-    nidx' <- Just $ head $ 1 `freeNodeLabelsOf_` g
+    nidx' <- Just $ head $ 1 `freeNodeIndices'` g
     g' <- return g >>=
       filterOutEidxFromNidx eidx nidx  >>=
       maybeInsertNode (Node nidx' [edge]) >>=
       swapNidxInEidx nidx nidx' eidx
-    n' <- getNode_ nidx' g'
+    n' <- getNode' nidx' g'
     return (nodes ++ [n'], g')
   | otherwise = Nothing
 
@@ -300,8 +296,8 @@ swapIn (g, n, e) e'
   = swapEidxInNidx eIDX eIDX' nIDX g
 
 -- TODO could be generalized to chains of any length
-swapChain :: (Node, Edge, Node, Edge, Node) -> Edge -> GraphData -> Maybe GraphData
-swapChain (ni, eij, nj, ejk, nk) eik g
+swapChain' :: (Node, Edge, Node, Edge, Node) -> Edge -> GraphData -> Maybe GraphData
+swapChain' (ni, eij, nj, ejk, nk) eik g
   = return g >>=
     swapEIDX (nidx ni, eidx eij) (eidx eik) >>=
     swapEIDX (nidx nk, eidx ejk) (eidx eik) >>=

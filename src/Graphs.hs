@@ -1,4 +1,5 @@
-module Graphs where
+module Graphs (peace6j, pill, oneCasimir,
+               twoCasimir, threeCasimir, fourCasimir) where
 import GraphRecursive
 
 {-
@@ -10,13 +11,13 @@ stockGraph g = let
   e = Edge (eL !! _)  [] _
   n = Node (nL !! _) []
 
-  in return g >>= work_ [InsertE [], InsertN []]
+  in return g >>= work [InsertE [], InsertN []]
 -}
 
 peace6j :: (GraphRecursive g) => g -> Maybe g
 peace6j g = let
-  eL = 6  `freeEdgeLabelsOf_` g
-  nL = 4  `freeNodeLabelsOf_` g
+  eL = 6  `freeEdgeLabelsOf` g
+  nL = 4  `freeNodeLabelsOf` g
 
   e13 = Edge (eL !! 0)  [n1,n3] D
   e32 = Edge (eL !! 1)  [n3,n2] D
@@ -30,7 +31,7 @@ peace6j g = let
   n3 = Node (nL !! 3) [e32,e03,e13]
   n2 = Node (nL !! 2) [e21,e02,e32]
 
-  in return g >>= work_ [
+  in return g >>= work [
   InsertN [
       n0,
       n1,
@@ -45,33 +46,10 @@ peace6j g = let
       e02 ]
   ]
 
-
-
-dumbell :: (GraphRecursive g) => g -> Maybe g
-dumbell g = let
-  eL = 3  `freeEdgeLabelsOf_` g
-  nL = 2  `freeNodeLabelsOf_` g
-
-  n1n2 = Edge (eL !! 0)  [n1, n2] G
-  n11 = Edge (eL !! 1)  [n1, n1] D
-  n22 = Edge (eL !! 2)  [n2, n2] D
-
-  n1 = Node (nL !! 0) [n11, n11, n1n2]
-  n2 = Node (nL !! 1) [n1n2, n22, n22]
-
-  in return g >>= work_ [
-  InsertE [
-      n1n2,
-      n11,
-      n22 ],
-  InsertN [
-      n1,
-      n2 ]]
-
 twoCasimir :: (GraphRecursive g) => g -> Maybe g
 twoCasimir g = let
-  eL = 6  `freeEdgeLabelsOf_` g
-  nL = 4  `freeNodeLabelsOf_` g
+  eL = 6  `freeEdgeLabelsOf` g
+  nL = 4  `freeNodeLabelsOf` g
 
   n21n11 = Edge (eL !! 0)  [n21, n11] D
   n11n21 = Edge (eL !! 1)  [n11, n21] D
@@ -85,7 +63,7 @@ twoCasimir g = let
   n12 = Node (nL !! 2) [n11n12, n12n22, n22n12]
   n22 = Node (nL !! 3) [n21n22, n22n12, n12n22]
 
-  in return g >>= work_ [
+  in return g >>= work [
   InsertE [
       n21n11,
       n11n21,
@@ -97,13 +75,12 @@ twoCasimir g = let
       n11,
       n21,
       n12,
-      n22]
-  ]
+      n22] ]
 
 oneCasimir :: (GraphRecursive g) => g -> Maybe g
 oneCasimir g = let
-  eL = 3 `freeEdgeLabelsOf_` g
-  nL = 2  `freeNodeLabelsOf_` g
+  eL = 3 `freeEdgeLabelsOf` g
+  nL = 2  `freeNodeLabelsOf` g
 
   eg  = Edge (eL !! 0)  [n1, n2] G
   e11 = Edge (eL !! 1) [n1, n1] D
@@ -112,14 +89,13 @@ oneCasimir g = let
   n1 = Node (nL !! 0) [e11, e11, eg]
   n2 = Node (nL !! 1) [eg, e22, e22]
 
-  in return g >>= work_ [InsertN [n1, n2], InsertE [eg, e11, e22]]
-
+  in return g >>= work [InsertN [n1, n2], InsertE [eg, e11, e22]]
 
 fourCasimir :: (GraphRecursive g) => g -> Maybe g
 fourCasimir g = let
 
-  eL = 12 `freeEdgeLabelsOf_` g
-  nL = 8  `freeNodeLabelsOf_` g
+  eL = 12 `freeEdgeLabelsOf` g
+  nL = 8  `freeNodeLabelsOf` g
 
   n11 = Node (nL !! 0) [n41n11, n11n21, e1]
   n21 = Node (nL !! 1) [n11n21, n21n31, e2]
@@ -146,7 +122,7 @@ fourCasimir g = let
   e3 = Edge (eL !! 10) [n31, n32] G
   e4 = Edge (eL !! 11) [n41, n42] G
 
-  in return g >>= work_ [
+  in return g >>= work [
   InsertN [
   n11,
   n21,
@@ -172,28 +148,10 @@ fourCasimir g = let
   e4
       ]]
 
-selfGluon :: (GraphRecursive g) => g -> Maybe g
-selfGluon g = let
-  eL = 4 `freeEdgeLabelsOf_` g
-  nL = 3 `freeNodeLabelsOf_` g
-
-  eij = Edge (eL !! 0) [ni, nj] G
-  ejk = Edge (eL !! 1) [nj, nk] G
-  ekj = Edge (eL !! 2) [nk, nj] G
-  ekl = Edge (eL !! 3) [nk, nl] G
-
-  ni = Node (nL !! 0) [eij]
-  nj = Node (nL !! 1) [ejk, ejk]
-  nk = Node (nL !! 2) [ejk, ekj]
-  nl = Node (nL !! 3) [ekl]
-
-  in return g >>= work_ [
-  InsertN [ni, nj, nk, nl], InsertE [eij, ejk, ekj, ekl] ]
-
 pill :: (GraphRecursive g) => g -> Maybe g
 pill g = let
-  eL = 3 `freeEdgeLabelsOf_` g
-  nL = 2 `freeNodeLabelsOf_` g
+  eL = 3 `freeEdgeLabelsOf` g
+  nL = 2 `freeNodeLabelsOf` g
 
   eij = Edge (eL !! 0) [ni,nj] D
   eg  = Edge (eL !! 1) [ni,nj] G
@@ -202,111 +160,14 @@ pill g = let
   ni = Node (nL !! 0) [eg,eij,eji]
   nj = Node (nL !! 1) [eij,eg,eji]
 
-  in return g >>= work_ [
+  in return g >>= work [
   InsertN [ni, nj], InsertE [eij, eg, eji] ]
-
-{-
-(ni) __eij__ (nj) __ejk__ (nk)
--}
-tripleGluon :: (GraphRecursive g) => g -> Maybe g
-tripleGluon g = let
-  eL = 3 `freeEdgeLabelsOf_` g
-  nL = 4 `freeNodeLabelsOf_` g
-
-  nc = Node (nL !! 3) [eci,ecj,eck]
-  ni = Node (nL !! 0) [eci]
-  nj = Node (nL !! 1) [ecj]
-  nk = Node (nL !! 2) [eck]
-
-  eci = Edge (eL !! 0) [nc,ni] G
-  ecj = Edge (eL !! 1) [nc,nj] G
-  eck = Edge (eL !! 2) [nc,nk] G
-
-  in return g >>= work_ [
-  InsertN [ni,nj,nk,nc],
-  InsertE [eci,ecj,eck] ]
-
-{-
-(ni) __eij__ (nj) __ejk__ (nk)
--}
-line :: (GraphRecursive g) => g -> Maybe g
-line g = let
-  eL = 2 `freeEdgeLabelsOf_` g
-  nL = 3 `freeNodeLabelsOf_` g
-
-  ni = Node (nL !! 0) [eij]
-  nj = Node (nL !! 1) [eij,ejk]
-  nk = Node (nL !! 2) [ejk]
-
-  eij = Edge (eL !! 0) [ni,nj] G
-  ejk = Edge (eL !! 1) [nj,nk] G
-
-  in return g >>= work_ [
-  InsertN [ni,nj,nk],
-  InsertE [eij,ejk] ]
-
-
-handBag :: (GraphRecursive g) => g -> Maybe g
-handBag g = let
-  eI = 3 `freeEdgeLabelsOf_` g
-  nI = 2 `freeNodeLabelsOf_` g
-
-  n1 = Node (nI !! 0) [eg, ej, ei]
-  n2 = Node (nI !! 1) [ei, ej, eg]
-
-  eg = Edge (eI !! 0) [n1, n2] G
-  ei = Edge (eI !! 1) [n1, n2] U
-  ej = Edge (eI !! 2) [n1, n2] D
-
-  in return g >>= work_ [
-  InsertN [n1, n2],
-  InsertE [eg, ei, ej] ]
-
-addSunP1 :: (GraphRecursive g) => g -> Maybe g
-addSunP1 g = let
-  eI = 5 `freeEdgeLabelsOf_` g
-  nI = 6 `freeNodeLabelsOf_` g
-
-  e15 = Edge (eI !! 0) [n1, n5] U
-  e25 = Edge (eI !! 1) [n2, n5] D
-  e36 = Edge (eI !! 2) [n3, n6] D
-  e46 = Edge (eI !! 3) [n4, n6] U
-  e56 = Edge (eI !! 4) [n5, n6] G
-
-  n1 = Node (nI !! 0) [e15]
-  n2 = Node (nI !! 1) [e25]
-  n3 = Node (nI !! 2) [e36]
-  n4 = Node (nI !! 3) [e46]
-  n5 = Node (nI !! 4) [e15, e25, e56]
-  n6 = Node (nI !! 5) [e56, e46, e36]
-
-  in return g >>= work_ [
-  InsertE [e15, e25, e36, e46, e56],
-  InsertN [n1, n2, n3, n4, n5, n6] ]
-
-addRing :: (GraphRecursive g) => g -> Maybe g
-addRing g = let
-  eIDXs = 3 `freeEdgeLabelsOf_` g
-  nIDXs = 3 `freeNodeLabelsOf_` g
-
-  e1 = Edge (eIDXs !! 0) [n1, n2] G
-  e2 = Edge (eIDXs !! 1) [n2, n3] G
-  e3 = Edge (eIDXs !! 2) [n3, n1] G
-
-  n1 = Node (nIDXs !! 0) [e1, e3]
-  n2 = Node (nIDXs !! 1) [e1, e2]
-  n3 = Node (nIDXs !! 2) [e2, e3]
-
-  in return g >>= work_ [
-  InsertN [n1,n2,n3],
-  InsertE [e1,e2,e3] ]
-
 
 threeCasimir :: (GraphRecursive g) => g -> Maybe g
 threeCasimir g = let
 
-  eL = 100  `freeEdgeLabelsOf_` g
-  nL = 100  `freeNodeLabelsOf_` g
+  eL = 100  `freeEdgeLabelsOf` g
+  nL = 100  `freeNodeLabelsOf` g
 
   n11 = Node (nL !! 0) [n31n11, n11n21, e1]
   n21 = Node (nL !! 1) [n11n21, n21n31, e2]
@@ -329,7 +190,7 @@ threeCasimir g = let
   e2 = Edge (eL !! 9) [n21, n22] G
   e3 = Edge (eL !! 10) [n31, n32] G
 
-  in return g >>= work_ [
+  in return g >>= work [
   InsertN [
   n11,
   n21,
