@@ -1,8 +1,9 @@
 module Rules (
   module GraphRecursive,
-  Poly, VectorSpace(..),
+  Poly, VectorSpace(..), Decomposed, Scope(..),
   twistRule, gggRule, tadpoleRule,
   shrinkChainRule, loopRule, sunP1Rule
+
 
              ) where
 import GraphRecursive
@@ -10,59 +11,50 @@ import Debug.Trace
 
 import MathObj.LaurentPolynomial as LP
 type Poly = LP.T Int
-data VectorSpace poly g = VS poly g deriving (Show)
+data VectorSpace g = VS Poly g  deriving (Show)
 
+data Scope g = EdgeScope (Edge, VectorSpace g) | NodeScope (Node, VectorSpace g)
+data DebugInfo g = Maybe (String, Maybe g)
+type Decomposed g = (Poly, [VectorSpace g])
 
 -- EXPORTS --
 
-twistRule :: (GraphRecursive g) =>
-  (Edge, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-twistRule (emn, (VS poly g))
+twistRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+twistRule (EdgeScope (emn, (VS poly g)))
   | Just g' <- twist emn g
   = Just (poly, [VS minusOne g'])
   | otherwise = Nothing
 
 -- TODO add shrinkchain to the merged nodes
-sunP1Rule :: (GraphRecursive g) =>
-  (Edge, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-sunP1Rule (emn, (VS poly g))
+sunP1Rule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+sunP1Rule (EdgeScope (emn, (VS poly g)))
   | Just lhs <- sunP1LHS emn g
   , Just rhs <- sunP1RHS emn g
   = Just (poly, [VS plusOne lhs, VS minusOverN rhs])
   | otherwise = Nothing
 
-gggRule :: (GraphRecursive g) =>
-  (Node, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-gggRule (node, (VS poly g))
+gggRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+gggRule (NodeScope (node, (VS poly g)))
   | Just lhs <- gluonExpansionGraph "anticlock" node g
   , Just rhs <- gluonExpansionGraph "clock" node g
   = Just (poly, [VS plusOne lhs, VS minusOne rhs])
   | otherwise = Nothing
 
-shrinkChainRule :: (GraphRecursive g) =>
-  (Node, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-shrinkChainRule (node, (VS poly g))
+shrinkChainRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+shrinkChainRule (NodeScope (node, (VS poly g)))
   | Just g' <- shrinkChain node g
   = Just (poly, [VS plusOne g'])
   | otherwise = Nothing
 
-tadpoleRule :: (GraphRecursive g) =>
-  (Node, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-tadpoleRule (node, _)
+tadpoleRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+tadpoleRule (NodeScope (node, _))
   | True <- tadpole node
   = Just (zero, [])
   | otherwise = Nothing
 
 -- TODO delete loop and multiply graph by scalar
-loopRule :: (GraphRecursive g) =>
-  (Node, VectorSpace Poly g) ->
-  Maybe (Poly, [VectorSpace Poly g])
-loopRule (node, VS poly g)
+loopRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+loopRule (NodeScope (node, VS poly g))
   | Just g' <- loop node g
   = Just (poly, [VS plusN g'])
   | otherwise = Nothing
@@ -73,7 +65,7 @@ loopRule (node, VS poly g)
 -- quark loop
 loop :: (GraphRecursive g) => Node -> g -> Maybe g
 loop node g
-  | (Node _ [e1, e2]) <- node
+  | (N _ [e1, e2]) <- node
   , e1 =@ e2
   , e1 `is` U || e1 `is` D
   = return g >>= work [DeleteN [node], DeleteE [e1, e2]]
@@ -89,7 +81,7 @@ isTadpole e1 e2 e3
 
 tadpole :: Node -> Bool
 tadpole node
-  | Node _ [e1, e2, e3] <- node
+  | N _ [e1, e2, e3] <- node
   , isTadpole e1 e2 e3 ||
     isTadpole e3 e1 e2 ||
     isTadpole e2 e3 e1
@@ -102,7 +94,7 @@ tadpole node
 -- for directed type equality of eij, ejk
 shrinkChain :: (GraphRecursive g) => Node -> g -> Maybe g
 shrinkChain nj g
-  | (Node _ [eij', ejk']) <- nj
+  | (N _ [eij', ejk']) <- nj
   , eji <- orientEdge nj eij'
   , ejk <- orientEdge nj ejk'
   , eji /=@ ejk
@@ -111,7 +103,7 @@ shrinkChain nj g
       ni <- otherNode eji nj
       nk <- otherNode ejk nj
       eikLabel <- return $ head $ 1 `freeEdgeLabelsOf` g
-      eik  <- return $ Edge eikLabel [ni, nk] (edgeType ejk)
+      eik  <- return $ E eikLabel [ni, nk] (edgeType ejk)
       return g >>= swapChain (ni, eji, nj, ejk, nk) eik
   | otherwise = Nothing
 
@@ -121,13 +113,13 @@ vectMatch targetType nodes
   | length fNodes == 1 = Just $ head fNodes
 -- | otherwise = Nothing
   where
-    teq (Node _ [Edge _ _ eType]) = eType == targetType
+    teq (N _ [E _ _ eType]) = eType == targetType
     fNodes = [n | n <- nodes, teq $ oriented n]
 
 
 sunP1LHS :: (GraphRecursive g) => Edge -> g -> Maybe g
 sunP1LHS emn g
-  | (Edge _ [nm, nn] G) <- emn
+  | (E _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = do
       g' <- return g >>= work [RemoveE [emn]]
@@ -144,15 +136,15 @@ sunP1LHS emn g
 -- exchange generator indices
 twist :: (GraphRecursive g) => Edge -> g -> Maybe g
 twist emn g
-  | (Edge _ [nm, nn] G) <- emn
+  | (E _ [nm, nn] G) <- emn
   , antiChiralEq nm nn
-  , (Node nL edges) <- nm
-  = do return g >>= work[Swap [(nm, (Node nL (Prelude.reverse edges)))]]
+  , (N nL edges) <- nm
+  = do return g >>= work[Swap [(nm, (N nL (Prelude.reverse edges)))]]
   | otherwise = Nothing
 
 sunP1RHS :: (GraphRecursive g) => Edge -> g -> Maybe g
 sunP1RHS emn g
-  | (Edge _ [nm, nn] G) <- emn
+  | (E _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = return g >>= work [RemoveE [emn]]
   | otherwise = Nothing
@@ -161,27 +153,27 @@ gluonExpansionGraph :: (GraphRecursive g) => String -> Node -> g -> Maybe g
 
 --gluonExpansionGraph rotation nc g = trace (show nc) gluonExpansionGraph' rotation nc g
 gluonExpansionGraph rotation nc g
-  | (Node _ [eic, ejc, ekc]) <- nc
-  , (Edge _ _ G) <- eic
-  , (Edge _ _ G) <- ejc
-  , (Edge _ _ G) <- ekc
+  | (N _ [eic, ejc, ekc]) <- nc
+  , (E _ _ G) <- eic
+  , (E _ _ G) <- ejc
+  , (E _ _ G) <- ekc
   , rotation == "clock" || rotation == "anticlock"
   = do
       ([n1, n2, n3], g') <- safeSplit nc g
-      (Node n1L [e1i]) <- Just n1
-      (Node n2L [e2j]) <- Just n2
-      (Node n3L [e3k]) <- Just n3
+      (N n1L [e1i]) <- Just n1
+      (N n2L [e2j]) <- Just n2
+      (N n3L [e3k]) <- Just n3
       let
         eL = 3 `freeEdgeLabelsOf` g
         eType = if rotation == "anticlock" then D else U
 
-        e12 = Edge (eL !! 0) [n1, n2] eType
-        e23 = Edge (eL !! 1) [n2, n3] eType
-        e31 = Edge (eL !! 2) [n3, n1] eType
+        e12 = E (eL !! 0) [n1, n2] eType
+        e23 = E (eL !! 1) [n2, n3] eType
+        e31 = E (eL !! 2) [n3, n1] eType
 
-        n1' = Node n1L [e1i, e12, e31]
-        n2' = Node n2L [e12, e2j, e23]
-        n3' = Node n3L [e31, e23, e3k]
+        n1' = N n1L [e1i, e12, e31]
+        n2' = N n2L [e12, e2j, e23]
+        n3' = N n3L [e31, e23, e3k]
 
         in return g' >>= work [
         InsertE [e12, e23, e31],

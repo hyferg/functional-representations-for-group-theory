@@ -5,7 +5,16 @@
 **** Label                                                             :type:
 **** Node                                                              :data:
 **** Edge                                                              :data:
+**** GraphElement                                                      :data:
 **** Operation                                                         :data:
+***** InsertE
+***** InsertN
+***** RemoveE
+***** Swap
+***** Merge
+***** DeleteE
+***** DeleteN
+
 **** GraphRecursive                                                   :class:
 ***** getNode
 ***** getEdge
@@ -50,6 +59,8 @@
 **** GraphRecursive                                                   :class:
 **** Poly                                                              :type:
 **** VectorSpace                                                       :data:
+**** Scope                                                             :data:
+**** TreeVertex                                                        :type:
 *** Function
 **** twistRule
 **** gggRule
