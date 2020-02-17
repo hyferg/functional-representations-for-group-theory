@@ -2,20 +2,19 @@ module Rules (
   module GraphRecursive,
   Poly, VectorSpace(..), Decomposed, Scope(..),
   twistRule, gggRule, tadpoleRule,
-  shrinkChainRule, loopRule, sunP1Rule
+  shrinkChainRule, loopRule, sunP1Rule, zero, plusOne
 
 
              ) where
 import GraphRecursive
-import Debug.Trace
 
 import MathObj.LaurentPolynomial as LP
 type Poly = LP.T Int
 data VectorSpace g = VS Poly g  deriving (Show)
 
 data Scope g = EdgeScope (Edge, VectorSpace g) | NodeScope (Node, VectorSpace g)
-data DebugInfo g = Maybe (String, Maybe g)
 type Decomposed g = (Poly, [VectorSpace g])
+
 
 -- EXPORTS --
 

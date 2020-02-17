@@ -24,6 +24,7 @@ instance GraphRecursive GraphData where
     isEmpty           = isEmpty'
     swapChain         = swapChain'
 
+
 isEmpty' :: GraphData -> Bool
 isEmpty' (GraphData a b) = a == empty && b == empty
 

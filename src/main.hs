@@ -1,18 +1,14 @@
 import Algo
 import Graphs
-
 import Data.Tree
-
 import MathObj.LaurentPolynomial as LP
 
 main :: IO ()
 main = return ()
 
-
 --input = build peace6j
 --out = unfoldTree buildNode input
 --rep = putStr $ drawTree $ fmap show out
-
 
 poly x = foldTree foldNode $ unfoldTree buildNode $ build x
 med = unfoldTree buildNode $ build peace6j
@@ -29,7 +25,6 @@ ids = [
 
 out = map poly [pill, oneCasimir, twoCasimir,
                 threeCasimir, fourCasimir, peace6j]
-
 
 check = map (\(a,b) -> equivalent a b) $ zip ids out
 
