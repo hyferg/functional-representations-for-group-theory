@@ -24,7 +24,7 @@ add = (+)
 -}
 
 module Poly (Poly, mul, add, identical,
-             zero, plusOne, plusN,
+             zero, half, plusOne, plusN,
              minusOne, minusOverN) where
 
 import MathObj.LaurentPolynomial
@@ -38,6 +38,7 @@ type Poly = T (Ratio Integer)
 --y = fromCoeffs cs2
 
 zero = fromCoeffs [0] :: Poly
+half = fromCoeffs [1 % 2] :: Poly
 plusOne = fromCoeffs [1] :: Poly
 plusN = fromCoeffs [0,1] :: Poly
 minusOne = fromCoeffs [-1] :: Poly

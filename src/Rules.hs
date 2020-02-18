@@ -2,7 +2,7 @@ module Rules (
   module GraphRecursive,
   Poly, VectorSpace(..), Decomposed, Scope(..),
   twistRule, gggRule, tadpoleRule,
-  shrinkChainRule, loopRule, sunP1Rule, zero, plusOne
+  shrinkChainRule, loopRule, sunAdjRule, sonAdjRule,
 
 
              ) where
@@ -28,11 +28,18 @@ twistRule (EdgeScope (emn, (VS poly g)))
   | otherwise = Nothing
 
 -- TODO add shrinkchain to the merged nodes
-sunP1Rule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
-sunP1Rule (EdgeScope (emn, (VS poly g)))
-  | Just lhs <- sunP1LHS emn g
+sunAdjRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+sunAdjRule (EdgeScope (emn, (VS poly g)))
+  | Just lhs <- identity emn g
   , Just rhs <- sunP1RHS emn g
   = Just (poly, [VS plusOne lhs, VS minusOverN rhs])
+  | otherwise = Nothing
+
+sonAdjRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+sonAdjRule (EdgeScope (emn, (VS poly g)))
+  | Just lhs <- identity emn g
+  , Just rhs <- cross emn g
+  = Just (mul half poly, [VS plusOne lhs, VS minusOne rhs])
   | otherwise = Nothing
 
 gggRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
@@ -119,8 +126,8 @@ vectMatch targetType nodes
     fNodes = [n | n <- nodes, teq $ oriented n]
 
 
-sunP1LHS :: (GraphRecursive g) => Edge -> g -> Maybe g
-sunP1LHS emn g
+identity :: (GraphRecursive g) => Edge -> g -> Maybe g
+identity emn g
   | (E _ [nm, nn] G) <- emn
   , chiralEq nm nn
   = do
@@ -134,6 +141,23 @@ sunP1LHS emn g
       nmD <- vectMatch D nms
       return g''' >>= work [Merge [(nnU, nmD), (nnD, nmU)]]
   | otherwise = Nothing
+
+cross :: (GraphRecursive g) => Edge -> g -> Maybe g
+cross emn g
+  | (E _ [nm, nn] G) <- emn
+  , chiralEq nm nn
+  = do
+      g' <- return g >>= work [RemoveE [emn]]
+      (nms, g'')  <- safeSplit nm g'
+      (nns, g''') <- safeSplit nn g''
+      --(_,_) <- trace (show nms) safeSplit_ nn g''
+      nnU <- vectMatch U nns
+      nnD <- vectMatch D nns
+      nmU <- vectMatch U nms
+      nmD <- vectMatch D nms
+      return g''' >>= work [Merge [(nnU, nmU), (nnD, nmD)]]
+  | otherwise = Nothing
+
 
 -- exchange generator indices
 twist :: (GraphRecursive g) => Edge -> g -> Maybe g

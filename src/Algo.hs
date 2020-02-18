@@ -1,4 +1,4 @@
-module Algo (build, buildNode, foldNode) where
+module Algo (build, buildNode, foldNode, sunStrat, sonStrat) where
 import Rules
 import Poly
 import GraphData
@@ -11,16 +11,21 @@ data Strat g = EdgeStrat (Rule g, String, (g -> [Edge])) |
 type TreeVertex g = ((Poly, String, Maybe g), [VectorSpace g])
 
 
-strategy :: (GraphRecursive g) => [Strat g]
-strategy = [ EdgeStrat (sunP1Rule, "sunp1", (gluonEdges . allEdges)),
-             NodeStrat (loopRule, "loop", allNodes),
-             NodeStrat (shrinkChainRule, "chain", allNodes),
-             NodeStrat (tadpoleRule, "tadpole", allNodes),
-             NodeStrat (gggRule, "ggg", allNodes),
-             EdgeStrat (twistRule, "twist", allEdges) ]
+sunStrat :: (GraphRecursive g) => [Strat g]
+sunStrat = [EdgeStrat (sunAdjRule, "sunp1", (gluonEdges . allEdges))] ++ genericStrat
 
-buildNode :: (GraphRecursive g) => VectorSpace g -> TreeVertex g
-buildNode vs
+sonStrat :: (GraphRecursive g) => [Strat g]
+sonStrat = [EdgeStrat (sonAdjRule, "sunp1", (gluonEdges . allEdges))] ++ genericStrat
+
+genericStrat :: (GraphRecursive g) => [Strat g]
+genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
+                 NodeStrat (shrinkChainRule, "chain", allNodes),
+                 NodeStrat (tadpoleRule, "tadpole", allNodes),
+                 NodeStrat (gggRule, "ggg", allNodes),
+                 EdgeStrat (twistRule, "twist", allEdges) ]
+
+buildNode :: (GraphRecursive g) => [Strat g] -> VectorSpace g -> TreeVertex g
+buildNode strategy vs
   | (VS p g) <- vs, isEmpty g = ((p, "empty", Nothing), [])
   | length out >= 1 = head out
   | (VS p g) <- vs = ((p, "fail", Just g), [])
