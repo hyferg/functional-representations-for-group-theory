@@ -7,9 +7,12 @@ module Rules (
 
              ) where
 import GraphRecursive
+import Poly
 
 import MathObj.LaurentPolynomial as LP
-type Poly = LP.T Int
+
+--type Poly = LP.T Int
+
 data VectorSpace g = VS Poly g  deriving (Show)
 
 data Scope g = EdgeScope (Edge, VectorSpace g) | NodeScope (Node, VectorSpace g)
@@ -178,21 +181,3 @@ gluonExpansionGraph rotation nc g
         InsertE [e12, e23, e31],
         Swap [(n1, n1'),(n2, n2'),(n3, n3') ]]
   | otherwise = Nothing
-
-
--- POLYNOMIALS
-
-zero :: Poly
-zero = fromCoeffs []
-
-plusOne :: Poly
-plusOne = fromCoeffs [1]
-
-plusN :: Poly
-plusN = fromCoeffs [0,1]
-
-minusOne :: Poly
-minusOne = fromCoeffs [-1]
-
-minusOverN :: Poly
-minusOverN = fromShiftCoeffs (-1) [-1]

@@ -1,7 +1,7 @@
 module Algo (build, buildNode, foldNode) where
 import Rules
+import Poly
 import GraphData
-import MathObj.LaurentPolynomial as LP
 import Data.Maybe
 
 type Rule g = (Scope g -> Maybe (Decomposed g))
@@ -50,8 +50,8 @@ gluonEdges :: [Edge] -> [Edge]
 gluonEdges edges = filter (\x -> x `is` G) edges
 
 foldNode :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
-foldNode (a, _, Nothing) [b, c] = LP.mul a (LP.add b c)
-foldNode (a, _, Nothing) [b] = LP.mul a b
+foldNode (a, _, Nothing) [b, c] = mul a (add b c)
+foldNode (a, _, Nothing) [b] = mul a b
 foldNode (a, _, Nothing) [] = a
 
 build :: (GraphData -> Maybe GraphData) -> VectorSpace GraphData

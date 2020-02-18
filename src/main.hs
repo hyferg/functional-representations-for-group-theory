@@ -2,6 +2,7 @@ import Algo
 import Graphs
 import Data.Tree
 import MathObj.LaurentPolynomial as LP
+--import Poly (equivalent)
 
 main :: IO ()
 main = return ()
@@ -14,6 +15,7 @@ poly x = foldTree foldNode $ unfoldTree buildNode $ build x
 med = unfoldTree buildNode $ build peace6j
 poly1 = poly peace6j
 
+{-
 ids = [
   fromShiftCoeffs (0) [-1,0,1], -- pill
   fromShiftCoeffs (0) [], -- one
@@ -22,10 +24,11 @@ ids = [
   fromShiftCoeffs (0) [], -- four TODO
   fromShiftCoeffs (-1) [-4,0,5,0,-1] -- peace6j
   ]
+-}
 
 out = map poly [pill, oneCasimir, twoCasimir,
                 threeCasimir, fourCasimir, peace6j]
 
-check = map (\(a,b) -> equivalent a b) $ zip ids out
+--check = map (\(a,b) -> identical a b) $ zip ids out
 
 
