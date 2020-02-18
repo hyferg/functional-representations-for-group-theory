@@ -3,6 +3,7 @@ import Rules
 import Poly
 import GraphData
 import Data.Maybe
+import Debug.Trace
 
 type Rule g = (Scope g -> Maybe (Decomposed g))
 data Strat g = EdgeStrat (Rule g, String, (g -> [Edge])) |
@@ -22,7 +23,9 @@ genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
                  NodeStrat (shrinkChainRule, "chain", allNodes),
                  NodeStrat (tadpoleRule, "tadpole", allNodes),
                  NodeStrat (gggRule, "ggg", allNodes),
-                 EdgeStrat (twistRule, "twist", allEdges) ]
+                 EdgeStrat (twistRule, "twist", allEdges),
+                 EdgeStrat (metricRule, "metric", allEdges)
+               ]
 
 buildNode :: (GraphRecursive g) => [Strat g] -> VectorSpace g -> TreeVertex g
 buildNode strategy vs
@@ -54,10 +57,11 @@ applyStrat vs strat
 gluonEdges :: [Edge] -> [Edge]
 gluonEdges edges = filter (\x -> x `is` G) edges
 
-foldNode :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
-foldNode (a, _, Nothing) [b, c] = mul a (add b c)
-foldNode (a, _, Nothing) [b] = mul a b
-foldNode (a, _, Nothing) [] = a
+foldNode x = trace (show x) foldNode' x
+foldNode' :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
+foldNode' (a, _, Nothing) [b, c] = mul a (add b c)
+foldNode' (a, _, Nothing) [b] = mul a b
+foldNode' (a, _, Nothing) [] = a
 
 build :: (GraphData -> Maybe GraphData) -> VectorSpace GraphData
 build someGraphOn

@@ -2,9 +2,7 @@ module Rules (
   module GraphRecursive,
   Poly, VectorSpace(..), Decomposed, Scope(..),
   twistRule, gggRule, tadpoleRule,
-  shrinkChainRule, loopRule, sunAdjRule, sonAdjRule,
-
-
+  shrinkChainRule, loopRule, sunAdjRule, sonAdjRule, metricRule
              ) where
 import GraphRecursive
 import Poly
@@ -68,8 +66,25 @@ loopRule (NodeScope (node, VS poly g))
   = Just (poly, [VS plusN g'])
   | otherwise = Nothing
 
+metricRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
+metricRule (EdgeScope (edge, VS poly g))
+  | Just g' <- metricFlip edge g
+  = Just (poly, [VS plusOne g'])
+  | otherwise = Nothing
+
 
 -- UTILS --
+
+metricFlip :: (GraphRecursive g) => Edge -> g -> Maybe g
+metricFlip eij g
+  | (E _ [ni', nj'] eijType) <- eij
+  , (N _ niEdges) <- oriented ni'
+  , (N _ njEdges) <- oriented nj'
+  , edgeTypes niEdges `elem` metrics && edgeTypes njEdges `elem` metrics
+  = return g >>= work [UpdateEdgeType [(eij, invert eijType)]]
+  | otherwise = Nothing
+  where
+    metrics = [[U, U], [D, D]]
 
 -- quark loop
 loop :: (GraphRecursive g) => Node -> g -> Maybe g

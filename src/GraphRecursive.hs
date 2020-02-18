@@ -2,7 +2,7 @@ module GraphRecursive (
   GraphRecursive(..),
   EdgeType(..), Label, Node(..), Edge(..),
   Operation(..),
-  orientEdge, edgeType, chiralEq, antiChiralEq,
+  orientEdge, edgeType, edgeTypes, chiralEq, antiChiralEq,
   oriented, otherNode, rotate, is,
   LabelEquatable(..), ColorEquatable(..), Invertable(..) ) where
 
@@ -13,6 +13,7 @@ data Edge = E Label [Node] EdgeType
 
 data Operation = InsertE [Edge] | InsertN [Node] |
                  RemoveE [Edge] | Swap [(Node, Node)] |
+                 UpdateEdgeType [(Edge, EdgeType)] |
                  Merge [(Node, Node)] | DeleteE [Edge] | DeleteN [Node]
 
 class GraphRecursive g where

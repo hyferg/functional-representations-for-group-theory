@@ -7,15 +7,17 @@ import MathObj.LaurentPolynomial as LP
 main :: IO ()
 main = return ()
 
+graph = fourCasimir
+
 --input = build peace6j
 --out = unfoldTree buildNode input
---rep = putStr $ drawTree $ fmap show out
+rep = putStr $ drawTree $ fmap show med
 
 strat = sonStrat
 
 poly x = foldTree foldNode $ unfoldTree (buildNode strat) $ build x
-med = unfoldTree (buildNode strat) $ build peace6j
-poly1 = poly peace6j
+med = unfoldTree (buildNode strat) $ build graph
+poly1 = poly graph
 
 {-
 ids = [

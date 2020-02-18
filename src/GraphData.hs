@@ -88,6 +88,7 @@ work' ops g = maybeRecursion ops (handleOperation) g
 
 
 -- TODO edgetype check the merge
+-- TODO note that type comparison is not made so you can have metric tensors
 -- merges two vectors of type
 -- ... (ni) _etype_ (nj)   (nk) _etype (nl) ...
 -- to
@@ -98,7 +99,7 @@ merge (nj, nk) g
   , N nkIDX [ekl] <- nk
   , (E ejiIDX [_, ni] ejiType) <- orientEdge nj eij
   , (E eklIDX [_, nl] eklType) <- orientEdge nk ekl
-  , ejiType == invert eklType
+--  , ejiType == invert eklType
   = do
       nidx' <- Just $ head $ 1 `freeNodeIndices'` g
       n' <- Just $ N nidx' [eij, ekl]
@@ -152,6 +153,18 @@ handleOperation op g
   | Merge nijs <- op = merges nijs g
   | DeleteN nodes <- op = deleteNodes nodes g
   | DeleteE edges <- op = deleteEdges edges g
+  | UpdateEdgeType info <- op = updateEdgeTypes info g
+
+updateEdgeTypes :: [(Edge, EdgeType)] -> GraphData -> Maybe GraphData
+updateEdgeTypes infos graph = maybeRecursion infos (updateEdgeType) graph
+
+--GraphData (Map Nidx NodeP) (Map Eidx EdgeP)
+updateEdgeType :: (Edge, EdgeType) -> GraphData -> Maybe GraphData
+updateEdgeType ((E eL ns _), edgeType') g
+  | (GraphData _ mapEdge) <- g
+  , member eL mapEdge
+  = Just $ insertEdge (E eL ns edgeType') g
+  | otherwise = Nothing
 
 getEdgeIDXs :: [Edge] -> [Eidx]
 getEdgeIDXs edges = [ eIDX | E eIDX _ _ <- edges ]
