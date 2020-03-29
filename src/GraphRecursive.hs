@@ -14,7 +14,8 @@ data Edge = E Label [Node] EdgeType
 data Operation = InsertE [Edge] | InsertN [Node] |
                  RemoveE [Edge] | Swap [(Node, Node)] |
                  UpdateEdgeType [(Edge, EdgeType)] |
-                 Merge [(Node, Node)] | DeleteE [Edge] | DeleteN [Node]
+                 Merge [(Node, Node)] | DeleteE [Edge] |
+                 DeleteN [Node]
 
 class GraphRecursive g where
   getNode :: Label -> g -> Maybe Node

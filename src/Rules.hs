@@ -131,7 +131,7 @@ shrinkChain nj g
       return g >>= swapChain (ni, eji, nj, ejk, nk) eik
   | otherwise = Nothing
 
---vectMatch :: EdgeType -> [Node] -> [Node]
+vectMatch :: EdgeType -> [Node] -> [Node]
 --vectMatch targetType nodes = trace (show nodes) (vectMatch' targetType $ map oriented nodes)
 vectMatch targetType nodes
   | length fNodes == 1 = Just $ head fNodes
