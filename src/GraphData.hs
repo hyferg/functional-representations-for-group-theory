@@ -16,11 +16,11 @@ emptyGraph :: GraphData
 emptyGraph = GraphData (Map.empty) (Map.empty)
 
 instance GraphRecursive GraphData where
-    --splitNode  = splitNode'
+    splitNode  = splitNode'
     --mergeNodes = mergeNodes'
     product    = product'
-    --removeEdge = removeEdge'
-    --removeNode = removeNode'
+    removeNode = removeNode'
+    removeEdge = removeEdge'
 
     freeEdgeLabelsOf  = freeEdgeLabels'
     freeNodeLabelsOf  = freeNodeLabels'
@@ -30,6 +30,8 @@ instance GraphRecursive GraphData where
     allEdges          = allEdges'
     isEmpty           = isEmpty'
 
+
+-- NOTE top level typeclass functions
 
 
 -- from a stale node and graph, gets synced node and does the split
@@ -41,32 +43,7 @@ splitNode' staleNode g
       GraphData.split freshNode g
   | otherwise = Nothing
 
--- NOTE helper function NOTE
-updateEdges :: [(Nidx, Nidx, Eidx)] -> GraphData -> Maybe GraphData
-updateEdges infos g = maybeRecursion infos (swapNidxInEidx) g
 
-
-
-{-
-mergeNodes :: [Node] -> GraphData -> Maybe (Node, g)
-mergeNodes nodes g
-  | edges <- catMaybes $ map oneEdge nodes
-  , length nodes == length edges
-  = do
-      nidx' <- return $ 1 `freeNodeLabels'` g
-      n' <- return $ N nidx' [edges]
-      infos <- return $ zip3
-      return g >>=
-        insertNode n' >>=
-        updateEdges infos >>=
-        deleteNodes nodes
--}
-
-
-{-
-maybeinsertedge
-maybeinsertnode
--}
 product' :: ([Node], [Edge]) -> GraphData ->  Maybe GraphData
 product' (nodes, edges) g
   | length ghostNodes == length ghostPairs
@@ -82,27 +59,29 @@ product' (nodes, edges) g
 
     ghostBases = [ getNode l g | (N l _) <- ghostNodes]
     ghostPairs = zip (catMaybes ghostBases) ghostNodes
-    mergedNodes = map (\(a,b) -> mergeNodes a b) ghostPairs
+    mergedNodes = map (\(a,b) -> clickNodes a b) ghostPairs
 
-
-mergeNodes :: Node -> Node -> Node
-mergeNodes (N a baseEdges) (N b partialEdges)
-  | a == b
-  , [e1] <- baseEdges
-  , [idx] <- ghostidxs
-  = N a (Foldable.toList $
-         Seq.update idx e1 edgeSeq)
-  | a == b
-  , [e1,e2] <- baseEdges
-  , [idx0, idx1] <- ghostidxs
-  = N a (Foldable.toList $
-         Seq.update idx1 e2 $
-         Seq.update idx0 e1 edgeSeq)
-  where
-    edgeSeq  = Seq.fromList partialEdges
-    ghostidxs = [ i | (i, e) <- zip [0..] partialEdges, e =~ Ghost]
-
-
+--(ni) -> (nj) -> (nk)
+--(ni) -> (nk)
+removeNode' :: Node -> GraphData -> Maybe (Edge, GraphData)
+removeNode' nj g
+  | (N njLabel [eji, ejk]) <- oriented nj
+  , not (eji =@ ejk)
+  , (rotate eji) =~ ejk
+  , eikLabel <- head $ 1 `freeEdgeLabels'` g
+  = do
+      ni <- otherNode eji nj
+      nk <- otherNode ejk nj
+      (N niLabel _) <- return ni
+      (N nkLabel _) <- return nk
+      eik <- return $ E eikLabel [ni, nk] (edgeType ejk)
+      g' <- return g >>=
+        swaps [ (eidx eji, eikLabel, niLabel),
+                (eidx ejk, eikLabel, nkLabel) ] >>=
+        product' ([],[eik]) >>=
+        deleteNodes [nj] >>=
+        deleteEdges [eji, ejk]
+      return (eik, g')
 
 removeEdge' :: Edge -> GraphData -> Maybe ((Node, Node), GraphData)
 removeEdge' eij g
@@ -115,36 +94,6 @@ removeEdge' eij g
       ni' <- getNode' (nidx ni) g''
       nj' <- getNode' (nidx nj) g''
       return ((ni', nj'), g'')
-
-removeEdgeBasic :: Edge -> GraphData -> Maybe GraphData
-removeEdgeBasic eij g
-  | (E _ [ni, nj] _) <- eij
-  , Just ([n1, n2], g') <- pulls [(eij, ni), (eij, nj)] ([], g)
-  = do
-      g'' <- return g' >>=
-             deleteEdges [eij] >>=
-             deleteNodes [n1, n2]
-      return g''
-
---(ni) -> (nj) -> (nk)
---(ni) -> (nk)
-removeNode' :: Node -> GraphData -> Maybe (Edge, GraphData)
-removeNode' nj g
-  | (N njLabel [eji, ejk]) <- oriented nj
-  , not (eji =@ ejk)
-  , (rotate eji) =~ ejk
-  , (eikLabel:_) <- 1 `freeEdgeLabels'` g
-  = do
-      ni <- otherNode eji nj
-      nk <- otherNode ejk nj
-      eik <- return $ E eikLabel [ni, nk] (edgeType ejk)
-      g' <- return g >>=
-        product' ([],[eik]) >>=
-        deleteNodes [nj] >>=
-        deleteEdges [eji, ejk]
-      return (eik, g')
-
--- NOTE top level typeclass functions
 
 freeEdgeLabels' :: Int -> GraphData -> [Eidx]
 freeEdgeLabels' n (GraphData _ me)
@@ -185,7 +134,36 @@ allEdges' (GraphData mapNode mapEdge) = catMaybes [
 isEmpty' :: GraphData -> Bool
 isEmpty' (GraphData a b) = a == empty && b == empty
 
--- NOTE
+-- NOTE helper functions NOTE
+
+-- combine two nodes together on ghost edges
+clickNodes :: Node -> Node -> Node
+clickNodes (N a baseEdges) (N b partialEdges)
+  | a == b
+  , [e1] <- baseEdges
+  , [idx] <- ghostidxs
+  = N a (Foldable.toList $
+         Seq.update idx e1 edgeSeq)
+  | a == b
+  , [e1,e2] <- baseEdges
+  , [idx0, idx1] <- ghostidxs
+  = N a (Foldable.toList $
+         Seq.update idx1 e2 $
+         Seq.update idx0 e1 edgeSeq)
+  where
+    edgeSeq  = Seq.fromList partialEdges
+    ghostidxs = [ i | (i, e) <- zip [0..] partialEdges, e =~ Ghost]
+
+removeEdgeBasic :: Edge -> GraphData -> Maybe GraphData
+removeEdgeBasic eij g
+  | (E _ [ni, nj] _) <- eij
+  , Just ([n1, n2], g') <- pulls [(eij, ni), (eij, nj)] ([], g)
+  = do
+      g'' <- return g' >>=
+             deleteEdges [eij] >>=
+             deleteNodes [n1, n2]
+      return g''
+
 
 
 -- assumes that the node and graph are in sync
@@ -261,8 +239,10 @@ getEdgeIDXs edges = [ eIDX | E eIDX _ _ <- edges ]
 getEdgeIDXsIn :: Node -> [Eidx]
 getEdgeIDXsIn (N _ edges) = getEdgeIDXs edges
 
+{-
 swaps :: [(Node, Node)] -> GraphData -> Maybe GraphData
 swaps nns graph = maybeRecursion nns (swap) graph
+-}
 
 -- TODO verify label equality
 swap :: (Node, Node) -> GraphData -> Maybe GraphData
@@ -345,6 +325,10 @@ insertNodes ns g = maybeRecursion ns (maybeInsertNode) g
 updateNodes :: [Node] -> GraphData -> Maybe GraphData
 updateNodes ns g = maybeRecursion ns (maybeUpdateNode) g
 
+-- old with new in
+swaps :: [(Eidx, Eidx, Nidx)] -> GraphData -> Maybe GraphData
+swaps infos g = maybeRecursion infos (swapEidxInNidx) g
+
 insertEdges :: [Edge] -> GraphData -> Maybe GraphData
 insertEdges es g = maybeRecursion es (maybeInsertEdge) g
 
@@ -392,8 +376,9 @@ swapNidxInEidx (nidx, nidx', eidx) (GraphData mn me)
   = Just $ GraphData mn (Map.insert eidx (EdgeP nIDXs' eType) me)
   | otherwise = Nothing
 
-swapEidxInNidx :: Eidx -> Eidx -> Nidx -> GraphData -> Maybe GraphData
-swapEidxInNidx eidx eidx' nidx (GraphData mn me)
+-- old with new in
+swapEidxInNidx :: (Eidx, Eidx, Nidx) -> GraphData -> Maybe GraphData
+swapEidxInNidx (eidx, eidx', nidx) (GraphData mn me)
   | Just (NodeP eIDXs) <- Map.lookup nidx mn
   , NodeP eIDXs' <- swapOutEdge eidx eidx' (NodeP eIDXs)
   , length eIDXs == length eIDXs' && eIDXs /= eIDXs'
@@ -402,14 +387,14 @@ swapEidxInNidx eidx eidx' nidx (GraphData mn me)
 
 swapEIDX :: (Nidx, Eidx) -> Eidx -> GraphData -> Maybe GraphData
 swapEIDX (nidx, eidx) eidx' (GraphData mn me) =
-  swapEidxInNidx eidx eidx' nidx (GraphData mn me)
+  swapEidxInNidx (eidx, eidx', nidx) (GraphData mn me)
 
 swapIn :: (GraphData, Node, Edge) -> Edge -> Maybe GraphData
 swapIn (g, n, e) e'
   | (E eIDX _ _) <- e
   , (E eIDX' _ _) <- e'
   , (N nIDX _) <- n
-  = swapEidxInNidx eIDX eIDX' nIDX g
+  = swapEidxInNidx (eIDX, eIDX', nIDX) g
 
 -- TODO could be generalized to chains of any length
 swapChain' :: (Node, Edge, Node, Edge, Node) -> Edge -> GraphData -> Maybe GraphData

@@ -11,6 +11,12 @@ data Node = N Label [Edge]
 data Edge = E Label [Node] EdgeType | Ghost
 
 class GraphRecursive g where
+  splitNode :: Node -> g -> Maybe ([Node], g)
+  --mergeNodes :: [Node] -> g -> Maybe (Node, g)
+  product :: ([Node], [Edge]) -> g -> Maybe g
+  removeNode :: Node -> g -> Maybe (Edge, g)
+  removeEdge :: Edge -> g -> Maybe ((Node, Node), g)
+
   freeEdgeLabelsOf :: Int -> g -> [Label]
   freeNodeLabelsOf :: Int -> g -> [Label]
   getNode :: Label -> g -> Maybe Node
@@ -19,11 +25,6 @@ class GraphRecursive g where
   allEdges :: g -> [Edge]
   isEmpty :: g -> Bool
 
-  --splitNode :: Node -> g -> Maybe ([Node], g)
-  --mergeNodes :: [Node] -> g -> Maybe (Node, g)
-  product :: ([Node], [Edge]) -> g -> Maybe g
-  --removeEdge :: Edge -> g -> Maybe ((Node, Node), g)
-  --removeNode :: Node -> g -> Maybe (Edge, g)
 
 -- EXPORTS
 

@@ -14,6 +14,25 @@ import GraphData
 import GraphRecursive
 
 g = emptyGraph
+
+chain = do
+  let
+    nL = 3  `freeNodeLabelsOf` g
+    eL = 2  `freeEdgeLabelsOf` g
+
+    -- base
+    n0 = N (nL !! 0) [e01]
+    n1 = N (nL !! 1) [e01, e12]
+    n2 = N (nL !! 2) [e12]
+
+    e01 = E (eL !! 0) [n0, n1] D
+    e12 = E (eL !! 1) [n1, n2] U
+
+  g' <- product ([n0,n1,n2],[e01,e12]) g
+  (_, g'') <- removeNode n1 g'
+
+  return g''
+
 generator = do
   let
     eL = 3  `freeEdgeLabelsOf` g
