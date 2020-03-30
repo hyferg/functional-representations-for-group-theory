@@ -1,36 +1,42 @@
 module GraphRecursive (
   GraphRecursive(..),
   EdgeType(..), Label, Node(..), Edge(..),
-  Operation(..),
   orientEdge, edgeType, edgeTypes, chiralEq, antiChiralEq,
-  oriented, otherNode, rotate, is,
+  oriented, otherNode, rotate, is, oneEdge, hasGhost,
   LabelEquatable(..), ColorEquatable(..), Invertable(..) ) where
 
 data EdgeType = U | D | G deriving (Show, Eq)
 type Label = Int
 data Node = N Label [Edge]
-data Edge = E Label [Node] EdgeType
-
-data Operation = InsertE [Edge] | InsertN [Node] |
-                 RemoveE [Edge] | Swap [(Node, Node)] |
-                 UpdateEdgeType [(Edge, EdgeType)] |
-                 Merge [(Node, Node)] | DeleteE [Edge] |
-                 DeleteN [Node]
+data Edge = E Label [Node] EdgeType | Ghost
 
 class GraphRecursive g where
-  getNode :: Label -> g -> Maybe Node
-  getEdge :: Label -> g -> Maybe Edge
-  -- TODO no need for this to take an Int, just return an infinite list
   freeEdgeLabelsOf :: Int -> g -> [Label]
   freeNodeLabelsOf :: Int -> g -> [Label]
+  getNode :: Label -> g -> Maybe Node
+  getEdge :: Label -> g -> Maybe Edge
   allNodes :: g -> [Node]
   allEdges :: g -> [Edge]
-  safeSplit :: Node -> g -> Maybe ([Node], g)
-  work :: [Operation] -> g -> Maybe g
-  swapChain :: (Node, Edge, Node, Edge, Node) -> Edge -> g -> Maybe g
   isEmpty :: g -> Bool
 
+  --splitNode :: Node -> g -> Maybe ([Node], g)
+  --mergeNodes :: [Node] -> g -> Maybe (Node, g)
+  product :: ([Node], [Edge]) -> g -> Maybe g
+  --removeEdge :: Edge -> g -> Maybe ((Node, Node), g)
+  --removeNode :: Node -> g -> Maybe (Edge, g)
+
 -- EXPORTS
+
+isGhost :: Edge -> Bool
+isGhost (Ghost) = True
+isGhost _ = False
+
+
+hasGhost :: Node -> Bool
+hasGhost (N _ edges)
+  | 1 <= (length $ filter (isGhost) edges)
+  = True
+  | otherwise = False
 
 orientEdge :: Node -> Edge -> Edge
 orientEdge n0 edge
@@ -38,6 +44,7 @@ orientEdge n0 edge
   , n0 =@ n1 = edge
   | (E _ [n1, n2] _) <- edge
   , n0 =@ n2 || n0 /=@ n1 = rotate edge
+  | Ghost <- edge = Ghost
 
 oriented :: Node -> Node
 oriented node
@@ -82,6 +89,11 @@ is (E _ _ a) b = a == b
 edgeTypes :: [Edge] -> [EdgeType]
 edgeTypes edges = [ eType | E _ _ eType <- edges ]
 
+oneEdge :: Node -> Maybe Edge
+oneEdge (N _ [e]) = Just e
+oneEdge (N _ _) = Nothing
+
+
 
 -- TYPE PROPERTIES --
 
@@ -111,6 +123,8 @@ instance LabelEquatable Edge where
 
 instance ColorEquatable Edge where
   (=~) (E _ _ a) (E _ _ b) = a == b
+  (=~) (Ghost) (Ghost) = True
+  (=~) _ _ = False
 
 -- note that the nodes are oriented
 instance Show Node where
@@ -126,3 +140,5 @@ instance Show Edge where
     ++ show [ nL | (N nL _) <- nodes ] ++ id " "
     ++ show eType
     ++ ""
+
+  show (Ghost) = id "Ghost"
