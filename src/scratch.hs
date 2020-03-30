@@ -15,6 +15,26 @@ import GraphRecursive
 
 g = emptyGraph
 
+dangle = do
+  let
+    nL = 4  `freeNodeLabelsOf` g
+    eL = 2  `freeEdgeLabelsOf` g
+
+    -- base
+    n0 = N (nL !! 0) [e01]
+    n1 = N (nL !! 1) [e01]
+    n2 = N (nL !! 2) [e23]
+    n3 = N (nL !! 3) [e23]
+
+    e01 = E (eL !! 0) [n0, n1] G
+    e23 = E (eL !! 1) [n2, n3] G
+
+  g' <- product ([n0,n1,n2,n3],[e01,e23]) g
+  (n', g'') <- mergeNodes [n1,n2] g'
+  (_, g''') <- removeNode n' g''
+
+  return g'''
+
 chain = do
   let
     nL = 3  `freeNodeLabelsOf` g

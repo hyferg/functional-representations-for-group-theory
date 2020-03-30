@@ -12,7 +12,7 @@ data Edge = E Label [Node] EdgeType | Ghost
 
 class GraphRecursive g where
   splitNode :: Node -> g -> Maybe ([Node], g)
-  --mergeNodes :: [Node] -> g -> Maybe (Node, g)
+  mergeNodes :: [Node] -> g -> Maybe (Node, g)
   product :: ([Node], [Edge]) -> g -> Maybe g
   removeNode :: Node -> g -> Maybe (Edge, g)
   removeEdge :: Edge -> g -> Maybe ((Node, Node), g)

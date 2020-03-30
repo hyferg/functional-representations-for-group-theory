@@ -17,7 +17,7 @@ emptyGraph = GraphData (Map.empty) (Map.empty)
 
 instance GraphRecursive GraphData where
     splitNode  = splitNode'
-    --mergeNodes = mergeNodes'
+    mergeNodes = mergeNodes'
     product    = product'
     removeNode = removeNode'
     removeEdge = removeEdge'
@@ -43,6 +43,22 @@ splitNode' staleNode g
       GraphData.split freshNode g
   | otherwise = Nothing
 
+
+mergeNodes' :: [Node] -> GraphData -> Maybe (Node, GraphData)
+mergeNodes' nodes g
+  | edges <- catMaybes $ map oneEdge nodes
+  , length nodes == length edges
+  = do
+      nidx' <- return $ head $ 1 `freeNodeLabels'` g
+      nodeLabels <- return [ l | (N l _) <- nodes]
+      edgeLabels <- return [ l | (E l _ _) <- edges]
+      infos <- return $ zip3 nodeLabels (repeat nidx') edgeLabels
+      g' <- return g >>=
+        insertNodes [N nidx' edges] >>=
+        swapNwithNinE infos >>=
+        deleteNodes nodes
+      n' <- getNode nidx' g'
+      return (n', g')
 
 product' :: ([Node], [Edge]) -> GraphData ->  Maybe GraphData
 product' (nodes, edges) g
@@ -76,8 +92,8 @@ removeNode' nj g
       (N nkLabel _) <- return nk
       eik <- return $ E eikLabel [ni, nk] (edgeType ejk)
       g' <- return g >>=
-        swaps [ (eidx eji, eikLabel, niLabel),
-                (eidx ejk, eikLabel, nkLabel) ] >>=
+        swapEwithEinN [ (eidx eji, eikLabel, niLabel),
+                        (eidx ejk, eikLabel, nkLabel) ] >>=
         product' ([],[eik]) >>=
         deleteNodes [nj] >>=
         deleteEdges [eji, ejk]
@@ -163,8 +179,6 @@ removeEdgeBasic eij g
              deleteEdges [eij] >>=
              deleteNodes [n1, n2]
       return g''
-
-
 
 -- assumes that the node and graph are in sync
 split :: Node -> GraphData -> Maybe ([Node], GraphData)
@@ -326,8 +340,12 @@ updateNodes :: [Node] -> GraphData -> Maybe GraphData
 updateNodes ns g = maybeRecursion ns (maybeUpdateNode) g
 
 -- old with new in
-swaps :: [(Eidx, Eidx, Nidx)] -> GraphData -> Maybe GraphData
-swaps infos g = maybeRecursion infos (swapEidxInNidx) g
+swapEwithEinN :: [(Eidx, Eidx, Nidx)] -> GraphData -> Maybe GraphData
+swapEwithEinN infos g = maybeRecursion infos (swapEidxInNidx) g
+
+-- old with new in
+swapNwithNinE :: [(Nidx, Nidx, Eidx)] -> GraphData -> Maybe GraphData
+swapNwithNinE infos g = maybeRecursion infos (swapNidxInEidx) g
 
 insertEdges :: [Edge] -> GraphData -> Maybe GraphData
 insertEdges es g = maybeRecursion es (maybeInsertEdge) g
@@ -365,6 +383,7 @@ swapOutEdge target replacement (NodeP idxs) = NodeP [
 
 
 {-
+TODO membership test?
 (e eidx) [..., nidx, ...] =>
 (e eidx) [..., nidx', ...]
 -}
