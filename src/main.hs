@@ -7,7 +7,7 @@ import MathObj.LaurentPolynomial as LP
 main :: IO ()
 main = return ()
 
-graph = fourCasimir
+graph = twoCasimir
 
 --input = build peace6j
 --out = unfoldTree buildNode input
@@ -30,8 +30,8 @@ ids = [
   ]
 -}
 
-out = map poly [pill, oneCasimir, twoCasimir,
-                threeCasimir, fourCasimir, peace6j]
+-- out = map poly [pill, oneCasimir, twoCasimir,
+--                 threeCasimir, fourCasimir, peace6j]
 
 --check = map (\(a,b) -> identical a b) $ zip ids out
 

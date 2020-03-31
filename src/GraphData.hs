@@ -1,10 +1,11 @@
 module GraphData (
  GraphData (..), emptyGraph ) where
-import Data.Map.Strict as Map hiding (take, filter, map, splitAt)
+import Data.Map.Strict as Map hiding (take, filter, map, splitAt, drop)
 import Data.Maybe
 import qualified Data.Sequence as Seq
 import Data.Foldable as Foldable
 import GraphRecursive
+import Helper
 import Prelude hiding (product)
 type Eidx = Label
 type Nidx = Label
@@ -16,23 +17,34 @@ emptyGraph :: GraphData
 emptyGraph = GraphData (Map.empty) (Map.empty)
 
 instance GraphRecursive GraphData where
-    splitNode  = splitNode'
-    mergeNodes = mergeNodes'
-    product    = product'
-    removeNode = removeNode'
-    removeEdge = removeEdge'
+  updateEdgeType = updateEdgeType'
+  splitNode  = splitNode'
+  splitNodeCenterOn  = splitNodeCenterOn'
+  mergeNodes = mergeNodes'
+  product    = product'
+  removeNode = removeNode'
+  removeEdge = removeEdge'
 
-    freeEdgeLabelsOf  = freeEdgeLabels'
-    freeNodeLabelsOf  = freeNodeLabels'
-    getNode           = getNode'
-    getEdge           = getEdge'
-    allNodes          = allNodes'
-    allEdges          = allEdges'
-    isEmpty           = isEmpty'
+  freeEdgeLabelsOf  = freeEdgeLabels'
+  freeNodeLabelsOf  = freeNodeLabels'
+  getNode           = getNode'
+  getEdge           = getEdge'
+  allNodes          = allNodes'
+  allEdges          = allEdges'
+  isEmpty           = isEmpty'
 
 
 -- NOTE top level typeclass functions
 
+--GraphData (Map Nidx NodeP) (Map Eidx EdgeP)
+updateEdgeType' :: (Edge, EdgeType) -> GraphData -> Maybe (Edge, GraphData)
+updateEdgeType' ((E eL ns _), edgeType') g
+  | (GraphData _ mapEdge) <- g
+  , member eL mapEdge
+  , e' <- (E eL ns edgeType')
+  , g' <- insertEdge e' g
+  = Just (e', g)
+  | otherwise = Nothing
 
 -- from a stale node and graph, gets synced node and does the split
 splitNode' :: Node -> GraphData -> Maybe ([Node], GraphData)
@@ -42,6 +54,18 @@ splitNode' staleNode g
       freshNode <- getNode nIDX g
       GraphData.split freshNode g
   | otherwise = Nothing
+
+splitNodeCenterOn' :: Node -> Edge -> GraphData ->
+    Maybe ((Node, Node, Node), GraphData)
+splitNodeCenterOn' (N nl es) (E el _ _) g
+  | Just (N _ edges) <- getNode nl g
+  , Just idx <- idxsMatch el es
+  , length es == 3
+  , es' <- take 3 $ drop (idx - 1) $ cycle es
+  , Just ([n1,n2,n3], g') <- pulls [ (e, N nl es) | e <- es'] ([], g)
+  = Just ((n1,n2,n3), g')
+  | otherwise = Nothing
+
 
 
 mergeNodes' :: [Node] -> GraphData -> Maybe (Node, GraphData)
@@ -187,6 +211,8 @@ split node g
   = pulls [ (e, node) | e <- edges ] ([], g)
   | otherwise = Nothing
 
+-- splits a rank 3 node and returns new nodes
+-- returned are such that supplied edge's new node sits in middle
 
 -- UTILS --
 
@@ -236,16 +262,9 @@ pull (edge, node) (nodes, g)
   | otherwise = Nothing
 
 
-updateEdgeTypes :: [(Edge, EdgeType)] -> GraphData -> Maybe GraphData
-updateEdgeTypes infos graph = maybeRecursion infos (updateEdgeType) graph
+-- updateEdgeTypes :: [(Edge, EdgeType)] -> GraphData -> Maybe GraphData
+-- updateEdgeTypes infos graph = maybeRecursion infos (updateEdgeType') graph
 
---GraphData (Map Nidx NodeP) (Map Eidx EdgeP)
-updateEdgeType :: (Edge, EdgeType) -> GraphData -> Maybe GraphData
-updateEdgeType ((E eL ns _), edgeType') g
-  | (GraphData _ mapEdge) <- g
-  , member eL mapEdge
-  = Just $ insertEdge (E eL ns edgeType') g
-  | otherwise = Nothing
 
 getEdgeIDXs :: [Edge] -> [Eidx]
 getEdgeIDXs edges = [ eIDX | E eIDX _ _ <- edges ]

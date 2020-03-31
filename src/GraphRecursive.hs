@@ -2,8 +2,11 @@ module GraphRecursive (
   GraphRecursive(..),
   EdgeType(..), Label, Node(..), Edge(..),
   orientEdge, edgeType, edgeTypes, chiralEq, antiChiralEq,
-  oriented, otherNode, rotate, is, oneEdge, hasGhost,
-  LabelEquatable(..), ColorEquatable(..), Invertable(..) ) where
+  oriented, otherNode, rotate, isEdgeType, oneEdge, hasGhost,
+  LabelEquatable(..), ColorEquatable(..),
+  Invertable(..),
+  ChiralEquatable(..)
+  ) where
 
 data EdgeType = U | D | G deriving (Show, Eq)
 type Label = Int
@@ -11,7 +14,9 @@ data Node = N Label [Edge]
 data Edge = E Label [Node] EdgeType | Ghost
 
 class GraphRecursive g where
+  updateEdgeType :: (Edge, EdgeType) -> g -> Maybe (Edge, g)
   splitNode :: Node -> g -> Maybe ([Node], g)
+  splitNodeCenterOn :: Node -> Edge -> g -> Maybe ((Node, Node, Node), g)
   mergeNodes :: [Node] -> g -> Maybe (Node, g)
   product :: ([Node], [Edge]) -> g -> Maybe g
   removeNode :: Node -> g -> Maybe (Edge, g)
@@ -25,13 +30,11 @@ class GraphRecursive g where
   allEdges :: g -> [Edge]
   isEmpty :: g -> Bool
 
-
 -- EXPORTS
 
 isGhost :: Edge -> Bool
 isGhost (Ghost) = True
 isGhost _ = False
-
 
 hasGhost :: Node -> Bool
 hasGhost (N _ edges)
@@ -82,10 +85,8 @@ otherNode edge n
 rotate :: Edge -> Edge
 rotate (E label [n1, n2] eType) = E label [n2, n1] (invert eType)
 
-is :: Edge -> EdgeType -> Bool
-is (E _ _ a) b = a == b
-
--- UTILS --
+isEdgeType :: Edge -> EdgeType -> Bool
+isEdgeType (E _ _ a) b = a == b
 
 edgeTypes :: [Edge] -> [EdgeType]
 edgeTypes edges = [ eType | E _ _ eType <- edges ]
@@ -93,8 +94,6 @@ edgeTypes edges = [ eType | E _ _ eType <- edges ]
 oneEdge :: Node -> Maybe Edge
 oneEdge (N _ [e]) = Just e
 oneEdge (N _ _) = Nothing
-
-
 
 -- TYPE PROPERTIES --
 
@@ -115,6 +114,21 @@ class ColorEquatable o where
   (=~), (/=~) :: o -> o -> Bool
   x /=~ y = not (x  =~ y)
   x  =~ y = not (x /=~ y)
+
+class ChiralEquatable o where
+  -- chiral eq
+  (=*), (/=*) :: o -> o -> Bool
+  (=**), (/=**) :: o -> o -> Bool
+  x /=* y = not (x  =* y)
+  x  =* y = not (x /=* y)
+
+  -- anti chiral eq
+  x /=** y = not (x  =** y)
+  x  =** y = not (x /=** y)
+
+instance ChiralEquatable Node where
+  (=*) n1 n2 = chiralEq n1 n2
+  (=**) n1 n2 = antiChiralEq n1 n2
 
 instance LabelEquatable Node where
   (=@) (N a _) (N b _) = a == b
@@ -141,5 +155,4 @@ instance Show Edge where
     ++ show [ nL | (N nL _) <- nodes ] ++ id " "
     ++ show eType
     ++ ""
-
   show (Ghost) = id "Ghost"

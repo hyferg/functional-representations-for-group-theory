@@ -16,7 +16,7 @@ sunStrat :: (GraphRecursive g) => [Strat g]
 sunStrat = [EdgeStrat (sunAdjRule, "sunp1", (gluonEdges . allEdges))] ++ genericStrat
 
 sonStrat :: (GraphRecursive g) => [Strat g]
-sonStrat = [EdgeStrat (sonAdjRule, "sunp1", (gluonEdges . allEdges))] ++ genericStrat
+sonStrat = [EdgeStrat (sonAdjRule, "sonp1", (gluonEdges . allEdges))] ++ genericStrat
 
 genericStrat :: (GraphRecursive g) => [Strat g]
 genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
@@ -55,7 +55,7 @@ applyStrat vs strat
       [ EdgeScope (e, (VS p g)) | e <- elems g ]
 
 gluonEdges :: [Edge] -> [Edge]
-gluonEdges edges = filter (\x -> x `is` G) edges
+gluonEdges edges = filter (\x -> x `isEdgeType` G) edges
 
 foldNode x = trace (show x) foldNode' x
 foldNode' :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly

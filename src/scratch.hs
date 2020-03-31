@@ -12,6 +12,8 @@ import Prelude hiding (product)
 
 import GraphData
 import GraphRecursive
+import Helper
+import Graphs
 
 g = emptyGraph
 

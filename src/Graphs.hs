@@ -1,18 +1,22 @@
-module Graphs (peace6j, pill, oneCasimir,
-               twoCasimir, threeCasimir, fourCasimir) where
+module Graphs (peace6j, twoCasimir) where
 import GraphRecursive
+import Prelude hiding (product)
 
-{-
-stockGraph :: (GraphRecursive g) => g -> Maybe g
-stockGraph g = let
-  eL = _  `freeEdgeLabelsOf_` g
-  nL = _  `freeNodeLabelsOf_` g
+-- pill, oneCasimir, threeCasimir, fourCasimir
 
-  e = Edge (eL !! _)  [] _
-  n = Node (nL !! _) []
+oneCasimir :: (GraphRecursive g) => g -> Maybe g
+oneCasimir g = let
+  eL = 3 `freeEdgeLabelsOf` g
+  nL = 2  `freeNodeLabelsOf` g
 
-  in return g >>= work [InsertE [], InsertN []]
--}
+  eg  = E (eL !! 0)  [n1, n2] G
+  e11 = E (eL !! 1) [n1, n1] D
+  e22 = E (eL !! 2) [n2, n2] D
+
+  n1 = N (nL !! 0) [e11, e11, eg]
+  n2 = N (nL !! 1) [eg, e22, e22]
+
+  in return g >>= product ([n1,n2],[eg,e11,e22])
 
 peace6j :: (GraphRecursive g) => g -> Maybe g
 peace6j g = let
@@ -31,20 +35,7 @@ peace6j g = let
   n3 = N (nL !! 3) [e32,e03,e13]
   n2 = N (nL !! 2) [e21,e02,e32]
 
-  in return g >>= work [
-  InsertN [
-      n0,
-      n1,
-      n2,
-      n3 ],
-  InsertE [
-      e13,
-      e32,
-      e21,
-      e01,
-      e03,
-      e02 ]
-  ]
+  in return g >>= product ([n0,n1,n2,n3],[e13,e32,e21,e01,e03,e02])
 
 twoCasimir :: (GraphRecursive g) => g -> Maybe g
 twoCasimir g = let
@@ -63,19 +54,32 @@ twoCasimir g = let
   n12 = N (nL !! 2) [n11n12, n12n22, n22n12]
   n22 = N (nL !! 3) [n21n22, n22n12, n12n22]
 
-  in return g >>= work [
-  InsertE [
-      n21n11,
-      n11n21,
-      n12n22,
-      n22n12,
-      n11n12,
-      n21n22],
-    InsertN [
-      n11,
-      n21,
-      n12,
-      n22] ]
+  in return g >>= product ([ n11,
+                             n21,
+                             n12,
+                             n22],
+                           [ n21n11,
+                             n11n21,
+                             n12n22,
+                             n22n12,
+                             n11n12,
+                             n21n22]
+                          )
+
+
+
+{-
+stockGraph :: (GraphRecursive g) => g -> Maybe g
+stockGraph g = let
+  eL = _  `freeEdgeLabelsOf_` g
+  nL = _  `freeNodeLabelsOf_` g
+
+  e = Edge (eL !! _)  [] _
+  n = Node (nL !! _) []
+
+  in return g >>= work [InsertE [], InsertN []]
+
+
 
 oneCasimir :: (GraphRecursive g) => g -> Maybe g
 oneCasimir g = let
@@ -211,3 +215,5 @@ threeCasimir g = let
   n31n11
       ]]
 
+
+-}
