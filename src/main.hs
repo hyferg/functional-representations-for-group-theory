@@ -7,7 +7,7 @@ import MathObj.LaurentPolynomial as LP
 main :: IO ()
 main = return ()
 
-graph = oneCasimir
+graph = peace6j
 
 --input = build peace6j
 --out = unfoldTree buildNode input

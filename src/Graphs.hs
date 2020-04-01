@@ -1,8 +1,27 @@
-module Graphs (peace6j, twoCasimir, oneCasimir) where
+module Graphs (pill,
+               oneCasimir,
+               twoCasimir,
+               threeCasimir,
+               fourCasimir,
+               peace6j ) where
 import GraphRecursive
 import Prelude hiding (product)
 
--- pill, oneCasimir, threeCasimir, fourCasimir
+-- fourCasimir
+
+pill :: (GraphRecursive g) => g -> Maybe g
+pill g = let
+  eL = 3 `freeEdgeLabelsOf` g
+  nL = 2 `freeNodeLabelsOf` g
+
+  eij = E (eL !! 0) [ni,nj] D
+  eg  = E (eL !! 1) [ni,nj] G
+  eji = E (eL !! 2) [nj,ni] D
+
+  ni = N (nL !! 0) [eg,eij,eji]
+  nj = N (nL !! 1) [eij,eg,eji]
+
+  in return g >>= product ([ni,nj],[eij,eg,eji])
 
 oneCasimir :: (GraphRecursive g) => g -> Maybe g
 oneCasimir g = let
@@ -95,6 +114,58 @@ oneCasimir g = let
 
   in return g >>= work [InsertN [n1, n2], InsertE [eg, e11, e22]]
 
+
+
+
+
+-}
+
+threeCasimir :: (GraphRecursive g) => g -> Maybe g
+threeCasimir g = let
+
+  eL = 100  `freeEdgeLabelsOf` g
+  nL = 100  `freeNodeLabelsOf` g
+
+  n11 = N (nL !! 0) [n31n11, n11n21, e1]
+  n21 = N (nL !! 1) [n11n21, n21n31, e2]
+  n31 = N (nL !! 2) [n21n31, n31n11, e3]
+
+  n32 = N (nL !! 6) [e3, n12n32, n32n22]
+  n22 = N (nL !! 5) [e2, n32n22, n22n12]
+  n12 = N (nL !! 4) [e1, n22n12, n12n32]
+
+  n11n21 = E (eL !! 0) [n11,n21] D
+  n21n31 = E (eL !! 1) [n21,n31] D
+
+  n32n22 = E (eL !! 2) [n32,n22] D
+  n22n12 = E (eL !! 3) [n22,n12] D
+
+  n12n32 = E (eL !! 4) [n12, n32] D
+  n31n11 = E (eL !! 5) [n31, n11] D
+
+  e1 = E (eL !! 8) [n11, n12] G
+  e2 = E (eL !! 9) [n21, n22] G
+  e3 = E (eL !! 10) [n31, n32] G
+
+  in return g >>= product(
+  [ n11,
+    n21,
+    n31,
+    n32,
+    n22,
+    n12 ],
+  [ n11n21,
+    n21n31,
+    n32n22,
+    n22n12,
+    e1,
+    e2,
+    e3,
+    n12n32,
+    n31n11 ]
+  )
+
+
 fourCasimir :: (GraphRecursive g) => g -> Maybe g
 fourCasimir g = let
 
@@ -126,8 +197,10 @@ fourCasimir g = let
   e3 = E (eL !! 10) [n31, n32] G
   e4 = E (eL !! 11) [n41, n42] G
 
-  in return g >>= work [
-  InsertN [
+
+  in return g >>= product
+  (
+  [
   n11,
   n21,
   n31,
@@ -136,8 +209,8 @@ fourCasimir g = let
   n32,
   n22,
   n12
-          ],
-  InsertE [
+  ],
+  [
   n11n21,
   n21n31,
   n31n41,
@@ -150,70 +223,5 @@ fourCasimir g = let
   e2,
   e3,
   e4
-      ]]
-
-pill :: (GraphRecursive g) => g -> Maybe g
-pill g = let
-  eL = 3 `freeEdgeLabelsOf` g
-  nL = 2 `freeNodeLabelsOf` g
-
-  eij = E (eL !! 0) [ni,nj] D
-  eg  = E (eL !! 1) [ni,nj] G
-  eji = E (eL !! 2) [nj,ni] D
-
-  ni = N (nL !! 0) [eg,eij,eji]
-  nj = N (nL !! 1) [eij,eg,eji]
-
-  in return g >>= work [
-  InsertN [ni, nj], InsertE [eij, eg, eji] ]
-
-threeCasimir :: (GraphRecursive g) => g -> Maybe g
-threeCasimir g = let
-
-  eL = 100  `freeEdgeLabelsOf` g
-  nL = 100  `freeNodeLabelsOf` g
-
-  n11 = N (nL !! 0) [n31n11, n11n21, e1]
-  n21 = N (nL !! 1) [n11n21, n21n31, e2]
-  n31 = N (nL !! 2) [n21n31, n31n11, e3]
-
-  n32 = N (nL !! 6) [e3, n12n32, n32n22]
-  n22 = N (nL !! 5) [e2, n32n22, n22n12]
-  n12 = N (nL !! 4) [e1, n22n12, n12n32]
-
-  n11n21 = E (eL !! 0) [n11,n21] D
-  n21n31 = E (eL !! 1) [n21,n31] D
-
-  n32n22 = E (eL !! 2) [n32,n22] D
-  n22n12 = E (eL !! 3) [n22,n12] D
-
-  n12n32 = E (eL !! 4) [n12, n32] D
-  n31n11 = E (eL !! 5) [n31, n11] D
-
-  e1 = E (eL !! 8) [n11, n12] G
-  e2 = E (eL !! 9) [n21, n22] G
-  e3 = E (eL !! 10) [n31, n32] G
-
-  in return g >>= work [
-  InsertN [
-  n11,
-  n21,
-  n31,
-  n32,
-  n22,
-  n12
-          ],
-  InsertE [
-  n11n21,
-  n21n31,
-  n32n22,
-  n22n12,
-  e1,
-  e2,
-  e3,
-  n12n32,
-  n31n11
-      ]]
-
-
--}
+  ]
+  )

@@ -18,8 +18,6 @@ sunStrat = [EdgeStrat (sunAdjRule, "sunp1", (gluonEdges . allEdges))] ++ generic
 sonStrat :: (GraphRecursive g) => [Strat g]
 sonStrat = [EdgeStrat (sonAdjRule, "sonp1", (gluonEdges . allEdges))] ++ genericStrat
 
-genericStrat = []
-{-
 genericStrat :: (GraphRecursive g) => [Strat g]
 genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
                  NodeStrat (shrinkChainRule, "chain", allNodes),
@@ -28,7 +26,6 @@ genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
                  EdgeStrat (twistRule, "twist", allEdges),
                  EdgeStrat (metricRule, "metric", allEdges)
                ]
--}
 
 buildNode :: (GraphRecursive g) => [Strat g] -> VectorSpace g -> TreeVertex g
 buildNode strategy vs
@@ -60,11 +57,11 @@ applyStrat vs strat
 gluonEdges :: [Edge] -> [Edge]
 gluonEdges edges = filter (\x -> x `isEdgeType` G) edges
 
-foldNode x = trace (show x) foldNode' x
-foldNode' :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
-foldNode' (a, _, Nothing) [b, c] = mul a (add b c)
-foldNode' (a, _, Nothing) [b] = mul a b
-foldNode' (a, _, Nothing) [] = a
+--foldNode x = trace (show x) foldNode' x
+foldNode :: (GraphRecursive g) => (Poly, [Char], Maybe g) -> [Poly] -> Poly
+foldNode (a, _, Nothing) [b, c] = mul a (add b c)
+foldNode (a, _, Nothing) [b] = mul a b
+foldNode (a, _, Nothing) [] = a
 
 build :: (GraphData -> Maybe GraphData) -> VectorSpace GraphData
 build someGraphOn

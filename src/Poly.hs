@@ -32,11 +32,6 @@ import Data.Ratio as Ratio
 
 type Poly = T (Ratio Integer)
 
---cs1 = [3] :: [Ratio Integer]
---cs2 = [10] :: [Ratio Integer]
---x = fromCoeffs cs1
---y = fromCoeffs cs2
-
 zero = fromCoeffs [0] :: Poly
 half = fromCoeffs [1 % 2] :: Poly
 plusOne = fromCoeffs [1] :: Poly

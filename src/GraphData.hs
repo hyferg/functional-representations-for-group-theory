@@ -58,10 +58,12 @@ splitNode' staleNode g
 
 splitNodeCenterOn' :: Node -> Edge -> GraphData ->
     Maybe ((Node, Node, Node), GraphData)
+{-
 splitNodeCenterOn' a b c = trace (
   id "**splitNodeCenterOn: " ++ show a ++ show b
   ) xsplitNodeCenterOn' a b c
-xsplitNodeCenterOn' (N nl es) (E el _ _) g
+-}
+splitNodeCenterOn' (N nl es) (E el _ _) g
   | Just (N _ edges) <- getNode nl g
   , Just idx <- idxsMatch el es
   , length es == 3
@@ -72,9 +74,9 @@ xsplitNodeCenterOn' (N nl es) (E el _ _) g
 
 
 
---mergeNodes' :: [Node] -> GraphData -> Maybe (Node, GraphData)
-mergeNodes' a b = trace ("**mergeNodes: " ++ show a) xmergeNodes' a b
-xmergeNodes' nodes g
+mergeNodes' :: [Node] -> GraphData -> Maybe (Node, GraphData)
+--mergeNodes' a b = trace ("**mergeNodes: " ++ show a) xmergeNodes' a b
+mergeNodes' nodes g
   | edges <- catMaybes $ map oneEdge nodes
   , length nodes == length edges
   = do
@@ -387,9 +389,9 @@ maybeRecursion xs f b
 pulls :: [(Edge, Node)] -> ([Node], GraphData) -> Maybe ([Node], GraphData)
 pulls ens nsg = maybeRecursion ens (pull) nsg
 
---deleteNodes :: [Node] -> GraphData -> Maybe GraphData
-deleteNodes a b = trace (id "**deleteNodes: " ++ show a ++ id "\n") deleteNodes' a b
-deleteNodes' ns g = maybeRecursion ns (deleteNode) g
+deleteNodes :: [Node] -> GraphData -> Maybe GraphData
+--deleteNodes a b = trace (id "**deleteNodes: " ++ show a ++ id "\n") deleteNodes' a b
+deleteNodes ns g = maybeRecursion ns (deleteNode) g
 
 deleteEdges :: [Edge] -> GraphData -> Maybe GraphData
 deleteEdges es g = maybeRecursion es (deleteEdge) g
@@ -398,8 +400,8 @@ removeEdges :: [Edge] -> GraphData -> Maybe GraphData
 removeEdges es g = maybeRecursion es (removeEdgeBasic) g
 
 insertNodes :: [Node] -> GraphData -> Maybe GraphData
-insertNodes a b  = trace (id "**insertNodes: " ++ show a) insertNodes' a b
-insertNodes' ns g = maybeRecursion ns (maybeInsertNode) g
+--insertNodes a b  = trace (id "**insertNodes: " ++ show a) insertNodes' a b
+insertNodes ns g = maybeRecursion ns (maybeInsertNode) g
 
 updateNodes :: [Node] -> GraphData -> Maybe GraphData
 updateNodes ns g = maybeRecursion ns (maybeUpdateNode) g
@@ -452,9 +454,9 @@ TODO membership test?
 (e eidx) [..., nidx, ...] =>
 (e eidx) [..., nidx', ...]
 -}
---swapNidxInEidx ::  (Nidx, Nidx, Eidx) -> GraphData -> Maybe GraphData
-swapNidxInEidx a b = trace (id "**swapNidxInEidx: \n" ++ show a ++ id "\n" ++ show b ++ id "\n") swapNidxInEidx' a b
-swapNidxInEidx' (nidx, nidx', eidx) (GraphData mn me)
+swapNidxInEidx ::  (Nidx, Nidx, Eidx) -> GraphData -> Maybe GraphData
+--swapNidxInEidx a b = trace (id "**swapNidxInEidx: \n" ++ show a ++ id "\n" ++ show b ++ id "\n") swapNidxInEidx' a b
+swapNidxInEidx (nidx, nidx', eidx) (GraphData mn me)
   | Just (EdgeP nIDXs eType) <- Map.lookup eidx me
   , EdgeP nIDXs' _ <- swapOutNode nidx nidx' (EdgeP nIDXs eType)
   , length nIDXs == length nIDXs' && nIDXs /= nIDXs'
