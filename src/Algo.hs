@@ -18,6 +18,8 @@ sunStrat = [EdgeStrat (sunAdjRule, "sunp1", (gluonEdges . allEdges))] ++ generic
 sonStrat :: (GraphRecursive g) => [Strat g]
 sonStrat = [EdgeStrat (sonAdjRule, "sonp1", (gluonEdges . allEdges))] ++ genericStrat
 
+genericStrat = []
+{-
 genericStrat :: (GraphRecursive g) => [Strat g]
 genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
                  NodeStrat (shrinkChainRule, "chain", allNodes),
@@ -26,6 +28,7 @@ genericStrat = [ NodeStrat (loopRule, "loop", allNodes),
                  EdgeStrat (twistRule, "twist", allEdges),
                  EdgeStrat (metricRule, "metric", allEdges)
                ]
+-}
 
 buildNode :: (GraphRecursive g) => [Strat g] -> VectorSpace g -> TreeVertex g
 buildNode strategy vs

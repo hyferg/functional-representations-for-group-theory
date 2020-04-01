@@ -145,7 +145,7 @@ instance ColorEquatable Edge where
 instance Show Node where
   show node =
     (id "Node ") ++ show nL ++ id " "
-    ++ show [ e | e <- edges ] ++ id "\n"
+    ++ show [ e | e <- edges ]
     where
       (N nL edges) = oriented node
 

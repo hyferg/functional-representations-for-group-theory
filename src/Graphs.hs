@@ -1,4 +1,4 @@
-module Graphs (peace6j, twoCasimir) where
+module Graphs (peace6j, twoCasimir, oneCasimir) where
 import GraphRecursive
 import Prelude hiding (product)
 
@@ -7,9 +7,9 @@ import Prelude hiding (product)
 oneCasimir :: (GraphRecursive g) => g -> Maybe g
 oneCasimir g = let
   eL = 3 `freeEdgeLabelsOf` g
-  nL = 2  `freeNodeLabelsOf` g
+  nL = 2 `freeNodeLabelsOf` g
 
-  eg  = E (eL !! 0)  [n1, n2] G
+  eg  = E (eL !! 0) [n1, n2] G
   e11 = E (eL !! 1) [n1, n1] D
   e22 = E (eL !! 2) [n2, n2] D
 

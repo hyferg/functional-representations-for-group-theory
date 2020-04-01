@@ -8,7 +8,8 @@ module Rules (
   tadpoleRule,
   gggRule,
   twistRule,
-  metricRule
+  metricRule,
+  identity
              ) where
 import GraphRecursive
 import Poly
@@ -32,13 +33,14 @@ type Decomposed g = (Poly, [VectorSpace g])
 sunAdjRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
 sunAdjRule (EdgeScope (eij, (VS poly g)))
   | E _ [ni, nj] G <- eij
-  , N _ nies <- ni
+  , N _ nies <- oriented ni
   , edgeTypes nies `elem` cyclePermute [D,U,G] ||
     edgeTypes nies `elem` cyclePermute [U,D,G]
   , ni =* nj
   , Just lhs <- identity eij g
-  , Just rhs <- trace eij g
-  = Just (poly, [VS plusOne lhs, VS minusOverN rhs])
+--  , Just rhs <- trace eij g
+  = Just (zero, [VS zero lhs])
+--  = Just (poly, [VS plusOne lhs, VS minusOverN rhs])
   | otherwise = Nothing
 
 sonAdjRule :: (GraphRecursive g) => Scope g -> Maybe (Decomposed g)
@@ -98,12 +100,12 @@ identity eij g
   , 3 == length esi && length esi == length esj
   = do
       ((lAlpha,_,lBeta), g')  <- splitNodeCenterOn ni eij g
-      ((rAlpha,_,rBeta), g'') <- splitNodeCenterOn ni eij g'
+      ((rAlpha,_,rBeta), g'') <- splitNodeCenterOn nj eij g'
 
       return g'' >>=
         removeEdge eij >>= passGraph >>=
-        mergeNodes [lBeta, rAlpha] >>= passGraph >>=
-        mergeNodes [lAlpha, rBeta] >>= passGraph
+        mergeNodes [lBeta, rAlpha] >>= passGraph -- >>=
+--        mergeNodes [lAlpha, rBeta] >>= passGraph
 
 cross :: (GraphRecursive g) => Edge -> g -> Maybe g
 cross eij g
@@ -113,12 +115,12 @@ cross eij g
   , 3 == length esi && length esi == length esj
   = do
       ((lAlpha,_,lBeta), g')  <- splitNodeCenterOn ni eij g
-      ((rAlpha,_,rBeta), g'') <- splitNodeCenterOn ni eij g'
+      ((rAlpha,_,rBeta), g'') <- splitNodeCenterOn nj eij g'
 
       return g'' >>=
         removeEdge eij >>= passGraph >>=
-        mergeNodes [lBeta, rBeta]   >>= passGraph >>=
-        mergeNodes [lAlpha, rAlpha] >>= passGraph
+        mergeNodes [lBeta, rBeta]   >>= passGraph -- >>=
+--        mergeNodes [lAlpha, rAlpha] >>= passGraph
 
 trace :: (GraphRecursive g) => Edge -> g -> Maybe g
 trace eij g
