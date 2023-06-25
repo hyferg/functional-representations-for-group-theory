@@ -8,7 +8,7 @@ It helps simplify tensor expressions which have symmetries like SO(n) or SU(n).
 
 Useful for physics, chemistry, and engineering.
 
-Specifically this was built to remove redundant calculations in Feynman Diagrams.
+Specifically this was built to remove redundant calculations in Feynman diagrams.
 
 # Related Links
 - [Penrose graphical notation](https://en.wikipedia.org/wiki/Penrose_graphical_notation)
