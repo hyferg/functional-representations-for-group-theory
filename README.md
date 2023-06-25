@@ -1,4 +1,3 @@
-![img.png](media/recouple.png)
 
 # What is this
 
